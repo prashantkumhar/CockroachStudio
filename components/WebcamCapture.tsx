@@ -9,10 +9,28 @@ type Props = {
   onCapture: (dataUrl: string) => void;
 };
 
+async function openCamera(facingMode: "user" | "environment"): Promise<MediaStream> {
+  const constraints: MediaStreamConstraints = {
+    video: {
+      facingMode,
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+    },
+    audio: false,
+  };
+
+  try {
+    return await navigator.mediaDevices.getUserMedia(constraints);
+  } catch {
+    // Laptops often lack "environment" — fall back to any camera
+    return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  }
+}
+
 export default function WebcamCapture({ open, onClose, onCapture }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -28,28 +46,42 @@ export default function WebcamCapture({ open, onClose, onCapture }: Props) {
       return;
     }
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Camera not supported in this browser. Use Gallery or paste instead.");
+      return;
+    }
+
     let cancelled = false;
     setError(null);
+    setReady(false);
 
     async function start() {
       stopStream();
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false,
-        });
+        const stream = await openCamera(facingMode);
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+        const video = videoRef.current;
+        if (!video) return;
+
+        video.srcObject = stream;
+        await video.play();
+
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
           setReady(true);
+        } else {
+          video.onloadedmetadata = () => {
+            if (!cancelled && video.videoWidth > 0) setReady(true);
+          };
         }
-      } catch {
-        setError("Camera access denied or unavailable. Try uploading a photo instead.");
+      } catch (err) {
+        console.error("[webcam]", err);
+        setError(
+          "Camera access denied or unavailable. Allow camera permission, or use Gallery upload."
+        );
       }
     }
 
@@ -73,13 +105,26 @@ export default function WebcamCapture({ open, onClose, onCapture }: Props) {
     const video = videoRef.current;
     if (!video || !ready) return;
 
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) {
+      setError("Camera not ready yet — wait a second and try again.");
+      return;
+    }
+
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+
+    if (facingMode === "user") {
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
     stopStream();
     onCapture(dataUrl);
     onClose();
@@ -117,7 +162,11 @@ export default function WebcamCapture({ open, onClose, onCapture }: Props) {
               ref={videoRef}
               playsInline
               muted
-              className="h-full w-full object-cover"
+              autoPlay
+              className={[
+                "h-full w-full object-cover",
+                facingMode === "user" ? "scale-x-[-1]" : "",
+              ].join(" ")}
             />
           )}
         </div>
@@ -131,7 +180,7 @@ export default function WebcamCapture({ open, onClose, onCapture }: Props) {
             🔄 Flip
           </BrandButton>
           <BrandButton variant="primary" onClick={capture} disabled={!!error || !ready}>
-            📸 Capture
+            {ready ? "📸 Capture" : "Starting camera…"}
           </BrandButton>
         </div>
       </div>

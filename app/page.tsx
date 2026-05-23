@@ -34,18 +34,29 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageBase64: base64, mimeType }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const err = new Error(data.error ?? `HTTP ${res.status}`) as Error & { code?: string };
+          err.code = data.code;
+          throw err;
+        }
+        return data as { suggestions: Suggestion[] };
       })
-      .then((data: { suggestions: Suggestion[] }) => setSuggestions(data.suggestions))
-      .catch((err) => {
-        console.error("[suggest]", err);
+      .then((data) => setSuggestions(data.suggestions))
+      .catch((err: Error & { code?: string }) => {
+        console.error("[suggest]", err.message, err.code);
         suggestingFor.current = null;
-        setError("Couldn't generate meme ideas. Check your connection and try again.");
+        if (err.code === "CONFIG") {
+          setError("AI is not configured on the server. Contact the site owner.");
+        } else if (err.code === "PAYLOAD_TOO_LARGE") {
+          setError("Photo is too large. Try a smaller image or retake with webcam.");
+        } else {
+          setError("Couldn't generate meme ideas. Try again in a moment.");
+        }
         setPhase("upload");
       });
-  }, [phase, imageDataUrl, setSuggestions, setPhase]);
+  }, [phase, imageDataUrl, setSuggestions, setPhase, setError]);
 
   if (phase === "upload")    return <UploadZone />;
   if (phase === "suggesting") return <LoadingScreen />;

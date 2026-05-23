@@ -98,10 +98,14 @@ Create `.env.local` with:
 
 ```
 OPENROUTER_API_KEY=
+OPENROUTER_MODEL=google/gemini-2.0-flash-001   # optional override
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=                          # optional, for OG links
 ```
+
+See [`.env.example`](./.env.example). Production logs are JSON on the server — search Vercel logs by scope (`api.suggest`, `llm.openrouter`, etc.).
 
 ### Supabase setup
 

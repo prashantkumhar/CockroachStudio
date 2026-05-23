@@ -71,6 +71,13 @@ export default function SharedScreen() {
             >
               🔁 Make another meme
             </button>
+
+            <a
+              href="/wall"
+              className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              🏆 See today's meme wall →
+            </a>
           </div>
         </div>
       </main>

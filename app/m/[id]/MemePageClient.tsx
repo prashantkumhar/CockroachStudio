@@ -34,10 +34,6 @@ export default function MemePageClient({
   const [imgError, setImgError] = useState(false);
   const floatIdRef = useRef(0);
 
-  useEffect(() => {
-    console.log("[memeroach] imageUrl:", imageUrl);
-  }, [imageUrl]);
-
   // Check if creator via localStorage
   useEffect(() => {
     const token = localStorage.getItem(`memeroach-creator-${memeId}`);
@@ -198,6 +194,19 @@ export default function MemePageClient({
         >
           Make your own meme →
         </a>
+      </div>
+
+      {/* Floating emoji overlay — visible for all users */}
+      <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+        {floating.map((f) => (
+          <span
+            key={f.id}
+            className="animate-float-up absolute bottom-24 text-3xl select-none"
+            style={{ left: `${f.x}%` }}
+          >
+            {f.emoji}
+          </span>
+        ))}
       </div>
     </div>
   );

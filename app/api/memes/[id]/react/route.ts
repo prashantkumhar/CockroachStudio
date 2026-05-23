@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { logInfo, logError } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const VALID_EMOJIS = ["😂", "💀", "🔥"];
@@ -33,6 +34,7 @@ export async function POST(
       .gte("created_at", oneHourAgo);
 
     if ((count ?? 0) > 0) {
+      logInfo("api.react", "rate_limited", { memeId, emoji });
       return NextResponse.json({ error: "Already reacted" }, { status: 429 });
     }
 
@@ -44,9 +46,10 @@ export async function POST(
 
     if (error) throw error;
 
+    logInfo("api.react", "ok", { memeId, emoji });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[react]", err);
+    logError("api.react", err);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

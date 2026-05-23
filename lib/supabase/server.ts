@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { requireServerEnv } from "@/lib/logger";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -24,11 +25,10 @@ export async function createClient() {
 }
 
 export function createServiceClient() {
-  // Lazy import to avoid build-time env errors
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createClient } = require("@supabase/supabase-js");
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "missing"
+    requireServerEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireServerEnv("SUPABASE_SERVICE_ROLE_KEY")
   );
 }

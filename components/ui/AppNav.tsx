@@ -13,12 +13,20 @@ export default function AppNav({ right, showThemeToggle = true }: Props) {
       style={{ background: "var(--glass-bg)" }}
     >
       <div className="mx-auto flex h-14 max-w-page items-center justify-between gap-4 px-4 sm:px-8">
-        <a href="/" className="flex min-h-11 items-center gap-2 shrink-0">
-          <span className="font-display text-lg font-bold leading-none text-secondary">MR</span>
-          <span className="font-display text-base font-semibold leading-none text-on-surface">
-            Memeroach
-          </span>
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="/" className="flex min-h-11 items-center gap-2 shrink-0">
+            <span className="font-display text-lg font-bold leading-none text-secondary">MR</span>
+            <span className="font-display text-base font-semibold leading-none text-on-surface">
+              Memeroach
+            </span>
+          </a>
+          <a
+            href="/wall"
+            className="min-h-11 hidden items-center text-sm text-on-surface-variant transition-colors hover:text-secondary sm:flex"
+          >
+            🏆 Wall
+          </a>
+        </div>
 
         <div className="flex items-center gap-3">
           {right}

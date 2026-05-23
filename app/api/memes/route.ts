@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { logInfo, logError } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
       .upload(fileName, buffer, { contentType: "image/png", upsert: false });
 
     if (uploadError) {
-      console.error("[/api/memes] storage upload:", uploadError);
+      logError("api.memes.upload", uploadError, { fileName });
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
@@ -44,13 +45,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
-      console.error("[/api/memes] db insert:", insertError);
+      logError("api.memes.insert", insertError, { id });
       return NextResponse.json({ error: "DB insert failed" }, { status: 500 });
     }
 
+    logInfo("api.memes", "created", { id, templateId });
     return NextResponse.json({ id, imageUrl, creatorToken });
   } catch (err) {
-    console.error("[/api/memes]", err);
+    logError("api.memes", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

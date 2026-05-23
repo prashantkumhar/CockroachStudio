@@ -7,6 +7,7 @@ import BrandButton from "@/components/ui/BrandButton";
 import PageHeader from "@/components/ui/PageHeader";
 import BentoCard from "@/components/ui/BentoCard";
 import WebcamCapture from "@/components/WebcamCapture";
+import { compressImageDataUrl } from "@/lib/compressImage";
 import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_MB,
@@ -28,10 +29,16 @@ export default function UploadZone() {
   const cameraRef = useRef<HTMLInputElement>(null);
 
   const applyDataUrl = useCallback(
-    (dataUrl: string) => {
+    async (dataUrl: string) => {
       setError(null);
       setStoreError(null);
-      setImage(dataUrl);
+      try {
+        const compressed = await compressImageDataUrl(dataUrl);
+        setImage(compressed.dataUrl);
+      } catch (err) {
+        console.error("[upload] compress", err);
+        setError("Could not process that image. Try another photo.");
+      }
     },
     [setImage, setStoreError]
   );
