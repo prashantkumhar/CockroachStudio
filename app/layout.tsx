@@ -9,6 +9,10 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", weight
 export const metadata: Metadata = {
   title: "Memeroach — The meme maker that doesn't suck",
   description: "Upload a photo, get 6 AI-generated meme ideas, edit, and share. Like a cockroach, a good meme survives everything.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

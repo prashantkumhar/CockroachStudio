@@ -32,7 +32,7 @@ export default function SharedScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <AppNav />
+      <AppNav step={4} />
 
       <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8">
         <div className="w-full max-w-sm space-y-6 text-center">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AppNav from "@/components/ui/AppNav";
+import { useStore } from "@/lib/store";
 
 const MESSAGES = [
   "Consulting the council of memes...",
@@ -18,6 +19,7 @@ const MESSAGES = [
 
 export default function LoadingScreen() {
   const [msgIndex, setMsgIndex] = useState(0);
+  const setPhase = useStore((s) => s.setPhase);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -28,7 +30,18 @@ export default function LoadingScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <AppNav showThemeToggle={false} />
+      <AppNav
+        step={2}
+        right={
+          <button
+            type="button"
+            onClick={() => setPhase("upload")}
+            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+          >
+            ✕ Cancel
+          </button>
+        }
+      />
 
       <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8">
         <div className="relative mb-8">

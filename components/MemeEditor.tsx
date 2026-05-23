@@ -217,18 +217,15 @@ export default function MemeEditor() {
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <AppNav
-        showThemeToggle={false}
+        step={3}
         right={
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setPhase("picking")}
-              className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
-            >
-              ← Back
-            </button>
-            <p className="text-label-sm text-secondary">Step 3 of 4 — Edit</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setPhase("picking")}
+            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+          >
+            ← Back
+          </button>
         }
       />
 

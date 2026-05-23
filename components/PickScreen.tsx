@@ -19,6 +19,7 @@ export default function PickScreen() {
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <AppNav
+        step={2}
         right={
           <button
             type="button"

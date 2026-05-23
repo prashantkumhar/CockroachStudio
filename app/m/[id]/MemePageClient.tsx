@@ -32,6 +32,7 @@ export default function MemePageClient({
   const [isCreator, setIsCreator] = useState(false);
   const [totalLive, setTotalLive] = useState(Object.values(initialCounts).reduce((a, b) => a + b, 0));
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const floatIdRef = useRef(0);
 
   // Check if creator via localStorage
@@ -93,16 +94,7 @@ export default function MemePageClient({
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <AppNav
-        right={
-          <a
-            href="/"
-            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
-          >
-            Make your own →
-          </a>
-        }
-      />
+      <AppNav />
 
       <div className="w-full max-w-lg px-4 pt-6 pb-2 animate-slide-up">
         {imgError || !imageUrl ? (
@@ -114,13 +106,21 @@ export default function MemePageClient({
             </div>
           </div>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt="Meme"
-            className="w-full rounded-bento shadow-float"
-            onError={() => setImgError(true)}
-          />
+          <div className="relative w-full">
+            {!imgLoaded && (
+              <div className="w-full aspect-square rounded-bento bg-surface-container-high animate-pulse flex items-center justify-center">
+                <span className="text-4xl opacity-30">🪲</span>
+              </div>
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt="Meme"
+              className={`w-full rounded-bento shadow-float transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "absolute inset-0 opacity-0"}`}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+            />
+          </div>
         )}
       </div>
 
