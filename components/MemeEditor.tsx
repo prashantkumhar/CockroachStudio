@@ -33,6 +33,7 @@ export default function MemeEditor() {
   const setShared    = useStore((s) => s.setShared);
   const [shareError, setShareError] = useState<string | null>(null);
   const [gifBusy, setGifBusy] = useState(false);
+  const [cartoonStatus, setCartoonStatus] = useState<string | null>(null);
 
   const initial = suggestions[selectedIdx];
 
@@ -212,26 +213,64 @@ export default function MemeEditor() {
     setBusy(false);
   };
 
-  const handleDownloadGif = async () => {
+  const handleDownloadVideo = async () => {
     if (!imageDataUrl) return;
     setGifBusy(true);
     try {
-      const { renderMemeGif } = await import("@/lib/renderGif");
-      const blob = await renderMemeGif({
+      const renderConfig = {
         template,
         imageDataUrl,
         texts: texts.map((t, i) => t || template.slots[i].placeholder),
+      };
+      const { isVideoSupported, renderMemeVideo } = await import("@/lib/renderVideo");
+      if (isVideoSupported()) {
+        const blob = await renderMemeVideo(renderConfig);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "memeroach.webm";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } else {
+        // Fallback to GIF on browsers without captureStream/MediaRecorder
+        const { renderMemeGif } = await import("@/lib/renderGif");
+        const blob = await renderMemeGif(renderConfig);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "memeroach.gif";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+    } catch (err) {
+      console.error("[video]", err);
+    } finally {
+      setGifBusy(false);
+    }
+  };
+
+  const handleCartoonGif = async () => {
+    if (!imageDataUrl) return;
+    setCartoonStatus("Generating cartoon GIF...");
+    try {
+      const { renderMemeGif } = await import("@/lib/renderGif");
+      const gifBlob = await renderMemeGif({
+        template,
+        imageDataUrl,
+        texts: texts.map((t, i) => t || template.slots[i].placeholder),
+        cartoonize: true,
       });
-      const url = URL.createObjectURL(blob);
+
+      const url = URL.createObjectURL(gifBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "memeroach.gif";
+      a.download = "memeroach-cartoon.gif";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
-      console.error("[gif]", err);
+      console.error("[cartoon-gif]", err);
     } finally {
-      setGifBusy(false);
+      setCartoonStatus(null);
     }
   };
 
@@ -606,10 +645,18 @@ export default function MemeEditor() {
         <BrandButton
           variant="ghost"
           fullWidth
-          onClick={handleDownloadGif}
+          onClick={handleCartoonGif}
+          disabled={!!cartoonStatus || !stage}
+        >
+          {cartoonStatus ?? "🎨 AI Cartoon GIF"}
+        </BrandButton>
+        <BrandButton
+          variant="ghost"
+          fullWidth
+          onClick={handleDownloadVideo}
           disabled={gifBusy || !stage}
         >
-          {gifBusy ? "⏳ Generating GIF…" : "🎞️ Download animated GIF"}
+          {gifBusy ? "⏳ Rendering video…" : "🎬 Download as video"}
         </BrandButton>
         <div className="flex gap-2">
         <BrandButton

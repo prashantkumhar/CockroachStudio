@@ -82,7 +82,7 @@ export default function Home() {
       })
       .then((data) => setSuggestions(data.suggestions))
       .catch((err: Error & { code?: string }) => {
-        console.error("[suggest]", err.message, err.code);
+        console.warn("[suggest] handled error:", err.message, err.code);
         suggestingFor.current = null;
         if (err.code === "CONFIG") {
           setError("AI is not configured on the server. Contact the site owner.");

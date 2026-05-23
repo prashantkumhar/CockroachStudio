@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSuggestions } from "@/lib/llm";
+import { getSuggestions, type Suggestion } from "@/lib/llm";
 import { logError, logInfo } from "@/lib/logger";
 
 export const maxDuration = 25;
@@ -7,11 +7,52 @@ export const maxDuration = 25;
 /** ~3MB base64 keeps JSON body under Vercel's 4.5MB limit */
 const MAX_BASE64_LENGTH = 3_000_000;
 
+function buildFallbackSuggestions(): Suggestion[] {
+  return [
+    {
+      templateId: "top-bottom",
+      texts: ["ME OPENING ONE QUICK TAB", "BROWSER: 37 TABS IS SELF CARE"],
+      tone: "chaotic",
+    },
+    {
+      templateId: "bottom-only",
+      texts: ["when the '2 minute task' becomes your full personality"],
+      tone: "dry",
+    },
+    {
+      templateId: "pov",
+      texts: ["POV: you said 'let me just check Slack once'"],
+      tone: "relatable",
+    },
+    {
+      templateId: "when-you",
+      texts: ["when you finally fix the bug", "and it was one missing character"],
+      tone: "self-roast",
+    },
+    {
+      templateId: "caption-above",
+      texts: ["That face when prod breaks right after your 'small refactor'"],
+      tone: "office humor",
+    },
+    {
+      templateId: "panel-zoom",
+      texts: ["looks fine", "ships anyway", "opens hotfix tab"],
+      tone: "escalating",
+    },
+  ];
+}
+
 export async function POST(req: NextRequest) {
   const started = Date.now();
+  const useFallback = process.env.NODE_ENV !== "production";
 
   try {
     if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === "missing") {
+      if (useFallback) {
+        logInfo("api.suggest", "using local fallback suggestions", { reason: "missing_openrouter_key" });
+        return NextResponse.json({ suggestions: buildFallbackSuggestions(), fallback: true });
+      }
+
       logError("api.suggest", new Error("OPENROUTER_API_KEY not configured"));
       return NextResponse.json(
         { error: "AI service not configured", code: "CONFIG" },
@@ -50,8 +91,13 @@ export async function POST(req: NextRequest) {
       try {
         suggestions = await getSuggestions(imageBase64, mimeType);
       } catch (retryErr) {
+        if (useFallback) {
+          logInfo("api.suggest", "using local fallback suggestions", { reason: "llm_failure" });
+          suggestions = buildFallbackSuggestions();
+        } else {
         logError("api.suggest", retryErr, { attempt: 2 });
-        throw retryErr;
+          throw retryErr;
+        }
       }
     }
 

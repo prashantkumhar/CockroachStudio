@@ -2,14 +2,14 @@ import type { RenderConfig } from "./renderMeme";
 import { drawTextSlot } from "./renderMeme";
 
 const GIF_MAX_WIDTH = 420;
-const FRAMES_PER_SLOT = 10; // frames per text slot typewriter reveal
-const HOLD_FRAMES = 6;      // extra frames holding the completed meme
-const FRAME_DELAY = 80;     // ms per animation frame
-const HOLD_DELAY = 1800;    // total ms for the hold phase
+const FRAMES_PER_SLOT = 10;
+const HOLD_FRAMES = 6;
+const FRAME_DELAY = 80;
+const HOLD_DELAY = 1800;
 
 export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
   const { GIFEncoder, quantize, applyPalette } = await import("gifenc");
-  const { template, imageDataUrl, texts } = config;
+  const { template, imageDataUrl, texts, cartoonize } = config;
 
   const scale = Math.min(GIF_MAX_WIDTH / template.canvasWidth, 1);
   const W = Math.round(template.canvasWidth * scale);
@@ -24,26 +24,33 @@ export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
   ctx.fillStyle = "#f8fafc";
   ctx.fillRect(0, 0, W, H);
 
-  // Draw base image — static for all frames
+  // Draw base image
+  const img = new Image();
   await new Promise<void>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const { x, y, width, height, fit } = template.imageLayout;
-      const dx = x * W, dy = y * H, dw = width * W, dh = height * H;
-      if (fit === "cover") {
-        const s = Math.max(dw / img.width, dh / img.height);
-        const sw = dw / s, sh = dh / s;
-        ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, dx, dy, dw, dh);
-      } else {
-        const s = Math.min(dw / img.width, dh / img.height);
-        const sw = img.width * s, sh = img.height * s;
-        ctx.drawImage(img, dx + (dw - sw) / 2, dy + (dh - sh) / 2, sw, sh);
-      }
-      resolve();
-    };
-    img.onerror = reject;
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Image failed to load"));
     img.src = imageDataUrl;
   });
+
+  const { x, y, width, height, fit } = template.imageLayout;
+  const dx = x * W, dy = y * H, dw = width * W, dh = height * H;
+  if (fit === "cover") {
+    const s = Math.max(dw / img.width, dh / img.height);
+    const sw = dw / s, sh = dh / s;
+    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, dx, dy, dw, dh);
+  } else {
+    const s = Math.min(dw / img.width, dh / img.height);
+    const sw = img.width * s, sh = img.height * s;
+    ctx.drawImage(img, dx + (dw - sw) / 2, dy + (dh - sh) / 2, sw, sh);
+  }
+
+  // Apply cartoon filter ON the already-drawn pixels — no second image load
+  if (cartoonize) {
+    const { cartoonizePixels } = await import("./cartoonize");
+    const raw = ctx.getImageData(0, 0, W, H);
+    const filtered = cartoonizePixels(raw.data, W, H);
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(filtered.buffer as ArrayBuffer), W, H), 0, 0);
+  }
 
   const basePixels = ctx.getImageData(0, 0, W, H);
 
@@ -93,7 +100,6 @@ export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
 
   gif.finish();
   const bytes = gif.bytes();
-  // Copy into a plain ArrayBuffer to satisfy the Blob constructor type
   const plain = new Uint8Array(bytes).buffer as ArrayBuffer;
   return new Blob([plain], { type: "image/gif" });
 }

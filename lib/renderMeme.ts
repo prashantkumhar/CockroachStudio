@@ -4,6 +4,7 @@ export type RenderConfig = {
   template: MemeTemplate;
   imageDataUrl: string;
   texts: string[];
+  cartoonize?: boolean;
 };
 
 function wrapText(
