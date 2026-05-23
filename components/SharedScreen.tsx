@@ -2,23 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
+import AppNav from "@/components/ui/AppNav";
+import BrandButton from "@/components/ui/BrandButton";
+import BentoCard from "@/components/ui/BentoCard";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function SharedScreen() {
   const sharedMemeId = useStore((s) => s.sharedMemeId);
-  const creatorToken  = useStore((s) => s.creatorToken);
+  const creatorToken = useStore((s) => s.creatorToken);
   const reset = useStore((s) => s.reset);
   const [copied, setCopied] = useState(false);
 
-  // Persist creator token so /m/[id] can recognise the creator on revisit
   useEffect(() => {
     if (sharedMemeId && creatorToken) {
       localStorage.setItem(`memeroach-creator-${sharedMemeId}`, creatorToken);
     }
   }, [sharedMemeId, creatorToken]);
 
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/m/${sharedMemeId}`
-    : `/m/${sharedMemeId}`;
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/m/${sharedMemeId}`
+      : `/m/${sharedMemeId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareUrl);
@@ -27,53 +31,49 @@ export default function SharedScreen() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 bg-surface">
-      <div className="w-full max-w-sm text-center space-y-6">
-        {/* Icon */}
-        <div className="text-6xl">🪲</div>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <AppNav />
 
-        {/* Heading */}
-        <div>
-          <p className="text-label-sm uppercase tracking-widest text-secondary mb-2">Your meme is live</p>
-          <h1 className="font-display text-2xl font-bold text-on-surface">
-            Share it before it spreads on its own
-          </h1>
+      <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div className="text-6xl">🪲</div>
+
+          <PageHeader
+            align="center"
+            eyebrow="Your meme is live"
+            title="Share it before it spreads on its own"
+          />
+
+          <BentoCard className="text-left">
+            <p className="text-label-sm text-on-surface-variant mb-2">Share link</p>
+            <p className="break-all font-mono text-sm text-on-surface">{shareUrl}</p>
+          </BentoCard>
+
+          <div className="flex flex-col gap-3">
+            <BrandButton fullWidth onClick={handleCopy}>
+              {copied ? "✓ Copied!" : "📋 Copy link"}
+            </BrandButton>
+
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 w-full items-center justify-center rounded-btn border border-outline-variant
+                         font-semibold text-on-surface transition-all hover:border-secondary hover:text-secondary"
+            >
+              👀 View meme page
+            </a>
+
+            <button
+              type="button"
+              onClick={reset}
+              className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              🔁 Make another meme
+            </button>
+          </div>
         </div>
-
-        {/* Link box */}
-        <div className="bg-surface-container border border-outline-variant rounded-bento p-4 text-left">
-          <p className="text-on-surface-variant text-xs mb-2">Share link</p>
-          <p className="text-on-surface text-sm font-mono break-all">{shareUrl}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={handleCopy}
-            className="w-full bg-secondary text-on-secondary font-semibold py-3 rounded-btn
-                       hover:-translate-y-0.5 transition-all active:scale-95"
-          >
-            {copied ? "✓ Copied!" : "📋 Copy link"}
-          </button>
-
-          <a
-            href={shareUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full border border-outline-variant text-on-surface font-semibold py-3 rounded-btn
-                       text-center hover:border-secondary hover:text-secondary transition-all"
-          >
-            👀 View meme page
-          </a>
-
-          <button
-            onClick={reset}
-            className="text-on-surface-variant text-sm hover:text-secondary transition-colors"
-          >
-            🔁 Make another meme
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

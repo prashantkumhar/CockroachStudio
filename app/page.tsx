@@ -7,7 +7,7 @@ import UploadZone from "@/components/UploadZone";
 import LoadingScreen from "@/components/LoadingScreen";
 import PickScreen from "@/components/PickScreen";
 import SharedScreen from "@/components/SharedScreen";
-import type { Suggestion } from "@/lib/gemini";
+import type { Suggestion } from "@/lib/llm";
 
 // Konva must never run on the server
 const MemeEditor = dynamic(() => import("@/components/MemeEditor"), { ssr: false });
@@ -17,6 +17,7 @@ export default function Home() {
   const imageDataUrl = useStore((s) => s.imageDataUrl);
   const setSuggestions = useStore((s) => s.setSuggestions);
   const setPhase     = useStore((s) => s.setPhase);
+  const setError     = useStore((s) => s.setError);
 
   const suggestingFor = useRef<string | null>(null);
 
@@ -41,6 +42,7 @@ export default function Home() {
       .catch((err) => {
         console.error("[suggest]", err);
         suggestingFor.current = null;
+        setError("Couldn't generate meme ideas. Check your connection and try again.");
         setPhase("upload");
       });
   }, [phase, imageDataUrl, setSuggestions, setPhase]);
@@ -53,10 +55,11 @@ export default function Home() {
 
   // exporting — brief loading while uploading to Supabase
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
-      <div className="text-center space-y-3">
-        <div className="w-10 h-10 rounded-full border-4 border-outline-variant border-t-secondary animate-spin mx-auto" />
-        <p className="text-on-surface font-semibold">Uploading your masterpiece...</p>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-outline-variant border-t-secondary" />
+        <p className="font-display font-semibold text-on-surface">Uploading your masterpiece...</p>
+        <p className="text-sm text-on-surface-variant">Spreading to the internet...</p>
       </div>
     </div>
   );

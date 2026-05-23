@@ -40,8 +40,8 @@ export default function MemePreview({ templateId, imageDataUrl, texts, onClick, 
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
         "hover:-translate-y-0.5 active:scale-[0.98]",
         selected
-          ? "border-secondary shadow-[0_0_0_3px_rgb(var(--secondary)/0.3)]"
-          : "border-outline-variant hover:border-outline",
+          ? "border-secondary ring-2 ring-secondary/30"
+          : "border-outline-variant hover:border-outline hover:bg-surface-container-high",
       ].join(" ")}
       style={{ aspectRatio }}
     >

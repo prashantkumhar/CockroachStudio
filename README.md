@@ -30,7 +30,7 @@ Upload → Suggest → Pick → Edit → Share → React
 | App | Next.js 15 (App Router) + TypeScript |
 | UI | Tailwind + shadcn/ui |
 | Canvas | react-konva |
-| Vision LLM | Gemini 2.0 Flash (structured JSON output, fast + cheap) |
+| Vision LLM | Gemini 2.0 Flash via OpenRouter (structured JSON output, fast + cheap) |
 | State | zustand (single-page state machine) |
 | DB + Storage + Realtime | Supabase |
 | Deploy | Vercel |
@@ -65,7 +65,7 @@ The same renderer powers the six preview thumbnails *and* the final PNG export �
 
 ## Templates
 
-Six photo-native layouts that work on any uploaded image — no stock-image dependencies.
+Seven photo-native layouts that work on any uploaded image — no stock-image dependencies.
 
 1. `top-bottom` — classic Impact, top + bottom caption
 2. `bottom-only` — wholesome-meme style, single caption beneath
@@ -73,6 +73,7 @@ Six photo-native layouts that work on any uploaded image — no stock-image depe
 4. `when-you` — "when you..." subtitle, photo as the reaction
 5. `caption-above` — modern Tumblr/Twitter style: text block above photo
 6. `panel-zoom` — 3-panel progressive zoom on the photo, escalating captions
+7. `nobody-nobody` — Reddit format: Nobody: / Absolutely nobody: / punchline
 
 ---
 
@@ -96,7 +97,7 @@ npm run build
 Create `.env.local` with:
 
 ```
-GEMINI_API_KEY=
+OPENROUTER_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -104,9 +105,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 ### Supabase setup
 
-- Create a new Supabase project
-- Create a storage bucket `memes` with a public read policy
-- Create the `memes` and `reactions` tables (schemas in [`plan.md`](./plan.md))
+Run [`supabase/schema.sql`](./supabase/schema.sql) in your Supabase project's SQL Editor.
+It creates both tables, RLS policies, and Realtime setup.
+Then create a **public** Storage bucket named `memes` (see comments in that file).
 
 ---
 

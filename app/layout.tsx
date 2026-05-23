@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+import RemixHydrator from "./RemixHydrator";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`dark ${inter.variable} ${manrope.variable}`}>
       <body className="min-h-screen bg-surface text-on-surface font-body antialiased">
+        <RemixHydrator />
         {children}
       </body>
     </html>

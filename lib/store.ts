@@ -20,6 +20,11 @@ export type TextLayer = {
   strokeWidth: number;
 };
 
+export type RemixPreset = {
+  templateId: string;
+  texts: string[];
+};
+
 type Store = {
   phase: Phase;
   imageDataUrl: string | null;
@@ -28,6 +33,8 @@ type Store = {
   layers: TextLayer[];
   creatorToken: string | null;
   sharedMemeId: string | null;
+  remixPreset: RemixPreset | null;
+  error: string | null;
 
   setPhase: (phase: Phase) => void;
   setImage: (dataUrl: string) => void;
@@ -36,6 +43,8 @@ type Store = {
   setLayers: (layers: TextLayer[]) => void;
   updateLayer: (id: string, updates: Partial<TextLayer>) => void;
   setShared: (memeId: string, creatorToken: string) => void;
+  setRemixPreset: (preset: RemixPreset | null) => void;
+  setError: (error: string | null) => void;
   reset: () => void;
 };
 
@@ -47,6 +56,8 @@ const initialState = {
   layers: [],
   creatorToken: null,
   sharedMemeId: null,
+  remixPreset: null,
+  error: null,
 };
 
 export const useStore = create<Store>((set) => ({
@@ -54,7 +65,20 @@ export const useStore = create<Store>((set) => ({
 
   setPhase: (phase) => set({ phase }),
 
-  setImage: (dataUrl) => set({ imageDataUrl: dataUrl, phase: "suggesting" }),
+  setImage: (dataUrl) =>
+    set((state) => {
+      if (state.remixPreset) {
+        const { templateId, texts } = state.remixPreset;
+        return {
+          imageDataUrl: dataUrl,
+          remixPreset: null,
+          suggestions: [{ templateId, texts, tone: "Remix" }],
+          selectedIndex: 0,
+          phase: "editing",
+        };
+      }
+      return { imageDataUrl: dataUrl, phase: "suggesting" };
+    }),
 
   setSuggestions: (suggestions) => set({ suggestions, phase: "picking" }),
 
@@ -69,6 +93,10 @@ export const useStore = create<Store>((set) => ({
 
   setShared: (sharedMemeId, creatorToken) =>
     set({ sharedMemeId, creatorToken, phase: "shared" }),
+
+  setRemixPreset: (remixPreset) => set({ remixPreset }),
+
+  setError: (error) => set({ error }),
 
   reset: () => set(initialState),
 }));

@@ -5,6 +5,8 @@ import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText } from "reac
 import type { Node as KonvaNode } from "konva/lib/Node";
 import { useStore } from "@/lib/store";
 import { templateMap, templates } from "@/lib/templates";
+import AppNav from "@/components/ui/AppNav";
+import BrandButton from "@/components/ui/BrandButton";
 
 const FONTS = [
   { label: "IMPACT", value: "Impact, Arial Black, sans-serif" },
@@ -19,12 +21,17 @@ const COLORS = [
   { label: "Amber",  value: "#ffb783" },
 ];
 
+const STICKER_EMOJIS = ["😂", "💀", "🔥", "👀", "💯", "🤡", "🪳", "✨", "😭", "🫡"];
+
+type Sticker = { id: string; emoji: string; x: number; y: number; size: number };
+
 export default function MemeEditor() {
   const imageDataUrl = useStore((s) => s.imageDataUrl);
   const suggestions  = useStore((s) => s.suggestions);
   const selectedIdx  = useStore((s) => s.selectedIndex);
   const setPhase     = useStore((s) => s.setPhase);
   const setShared    = useStore((s) => s.setShared);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const initial = suggestions[selectedIdx];
 
@@ -35,12 +42,33 @@ export default function MemeEditor() {
     template.slots.map((s, i) => initial?.texts[i] ?? s.placeholder)
   );
 
+  const [stickers, setStickers] = useState<Sticker[]>([]);
+  const stickerIdRef = useRef(0);
+
   const changeTemplate = useCallback((newId: string) => {
     const t = templateMap[newId]!;
     setTemplateId(newId);
     setTexts((prev) => t.slots.map((s, i) => prev[i] ?? s.placeholder));
     setDragPos({});
+    setStickers([]);
   }, []);
+
+  const addSticker = useCallback(
+    (emoji: string) => {
+      const id = String(stickerIdRef.current++);
+      setStickers((prev) => [
+        ...prev,
+        {
+          id,
+          emoji,
+          x: template.canvasWidth * 0.35 + prev.length * 12,
+          y: template.canvasHeight * 0.35,
+          size: 52,
+        },
+      ]);
+    },
+    [template.canvasWidth, template.canvasHeight]
+  );
 
   // Background image
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
@@ -100,9 +128,12 @@ export default function MemeEditor() {
 
   const exportDataUrl = useCallback(async (): Promise<string> => {
     if (!stage) throw new Error("Canvas not ready");
-    await new Promise((r) => setTimeout(r, 60));
+    if (!bgImage) throw new Error("Image not loaded yet");
+    // Give Konva one full frame to flush the image onto the canvas before capture.
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    stage.draw();
     return stage.toDataURL({ pixelRatio: 2 });
-  }, [stage]);
+  }, [stage, bgImage]);
 
   const handleDownload = async () => {
     setBusy(true);
@@ -131,9 +162,12 @@ export default function MemeEditor() {
 
   const handleShare = async () => {
     setBusy(true);
-    setPhase("exporting");
+    setShareError(null);
     try {
+      // Capture the canvas BEFORE setPhase("exporting") — changing the phase
+      // unmounts MemeEditor which destroys the Konva Stage, producing a black export.
       const uri = await exportDataUrl();
+      setPhase("exporting");
       const res = await fetch("/api/memes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,6 +179,7 @@ export default function MemeEditor() {
     } catch (err) {
       console.error("[share]", err);
       setPhase("editing");
+      setShareError("Failed to share. Check your connection and try again.");
     }
     setBusy(false);
   };
@@ -155,17 +190,22 @@ export default function MemeEditor() {
   const H     = template.canvasHeight;
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant bg-surface-container sticky top-0 z-10">
-        <button
-          onClick={() => setPhase("picking")}
-          className="text-on-surface-variant hover:text-secondary text-sm transition-colors"
-        >
-          ← Back
-        </button>
-        <p className="text-label-sm uppercase tracking-widest text-secondary">Step 3 of 4 — Edit</p>
-      </div>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <AppNav
+        showThemeToggle={false}
+        right={
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setPhase("picking")}
+              className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              ← Back
+            </button>
+            <p className="text-label-sm text-secondary">Step 3 of 4 — Edit</p>
+          </div>
+        }
+      />
 
       {/* Template switcher */}
       <div className="flex gap-2 overflow-x-auto px-4 py-2.5 border-b border-outline-variant">
@@ -194,8 +234,8 @@ export default function MemeEditor() {
               height: H * scale,
               position: "relative",
               overflow: "hidden",
-              borderRadius: "0.5rem",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              borderRadius: "var(--radius-bento)",
+              boxShadow: "var(--shadow-float)",
             }}
           >
             <div
@@ -212,7 +252,7 @@ export default function MemeEditor() {
                 ref={setStage}
                 onPointerDown={(e) => { if (e.target === (e.target as KonvaNode).getStage()) setSelectedSlot(null); }}
               >
-                <Layer>
+                <Layer clipX={0} clipY={0} clipWidth={W} clipHeight={H}>
                   {/* Base background (light for text-outside-photo templates) */}
                   <Rect x={0} y={0} width={W} height={H} fill="#f8fafc" />
 
@@ -232,7 +272,16 @@ export default function MemeEditor() {
                   {template.slots.map((slot, i) => {
                     const tw    = slot.width * W;
                     const baseX = slot.anchorX * W - tw / 2;
-                    const baseY = slot.anchorY * H - slot.fontSize * 0.6;
+                    // Centre the text block around the anchor point (same logic as renderMeme).
+                    // Estimate max wrapped height using maxLines so the block stays in-canvas.
+                    const lineH  = slot.fontSize * 1.2;
+                    const estH   = slot.maxLines * lineH;
+                    const MARGIN = 6;
+                    const rawY   = slot.anchorY * H - estH / 2;
+                    const baseY  = Math.min(
+                      Math.max(rawY, MARGIN),
+                      H - estH - MARGIN,
+                    );
                     const p     = dragPos[i];
                     const isSelected = selectedSlot === i;
 
@@ -263,6 +312,11 @@ export default function MemeEditor() {
                         fill={fill}
                         stroke={fill === "#ffffff" ? "#000000" : (fill === "#ffff00" ? "#000000" : undefined)}
                         strokeWidth={fill === "#ffffff" || fill === "#ffff00" ? 2 : 0}
+                        shadowColor="rgba(0,0,0,0.65)"
+                        shadowBlur={4}
+                        shadowOffsetX={2}
+                        shadowOffsetY={2}
+                        shadowEnabled={true}
                         align={slot.align}
                         lineHeight={1.2}
                         wrap="word"
@@ -276,6 +330,24 @@ export default function MemeEditor() {
                       />,
                     ];
                   })}
+
+                  {stickers.map((st) => (
+                    <KonvaText
+                      key={st.id}
+                      text={st.emoji}
+                      x={st.x}
+                      y={st.y}
+                      fontSize={st.size}
+                      draggable
+                      onDragEnd={(e) =>
+                        setStickers((prev) =>
+                          prev.map((s) =>
+                            s.id === st.id ? { ...s, x: e.target.x(), y: e.target.y() } : s
+                          )
+                        )
+                      }
+                    />
+                  ))}
                 </Layer>
               </Stage>
             </div>
@@ -313,7 +385,24 @@ export default function MemeEditor() {
           </p>
         )}
 
-        {/* Font + color */}
+        <div className="pb-2">
+          <p className="text-label-sm text-on-surface-variant mb-2">Stickers</p>
+          <div className="flex gap-1 overflow-x-auto pb-1">
+            {STICKER_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => addSticker(emoji)}
+                className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-btn border border-outline-variant
+                           bg-surface-container-high text-xl transition-all hover:border-secondary active:scale-95"
+                aria-label={`Add ${emoji} sticker`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2 flex-wrap pb-1">
           <div className="flex gap-1">
             {FONTS.map((f, i) => (
@@ -352,34 +441,37 @@ export default function MemeEditor() {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="border-t border-outline-variant bg-surface px-4 py-3 flex gap-2">
-        <button
+      {shareError && (
+        <p className="border-t border-error/20 bg-error-container/20 px-4 py-2 text-center text-sm text-error">
+          {shareError}
+        </p>
+      )}
+
+      <div className="flex gap-2 border-t border-outline-variant bg-surface px-4 py-3">
+        <BrandButton
+          variant="ghost"
+          className="flex-1"
           onClick={handleDownload}
           disabled={busy || !stage}
-          className="flex-1 border border-outline-variant text-on-surface text-sm font-semibold
-                     py-3 rounded-btn hover:border-secondary hover:text-secondary
-                     transition-all disabled:opacity-40 active:scale-95"
         >
           ⬇ Save
-        </button>
-        <button
+        </BrandButton>
+        <BrandButton
+          variant="ghost"
+          className="flex-1"
           onClick={handleCopy}
           disabled={busy || !stage}
-          className="flex-1 border border-outline-variant text-on-surface text-sm font-semibold
-                     py-3 rounded-btn hover:border-secondary hover:text-secondary
-                     transition-all disabled:opacity-40 active:scale-95"
         >
           📋 Copy
-        </button>
-        <button
+        </BrandButton>
+        <BrandButton
+          variant="primary"
+          className="flex-1"
           onClick={handleShare}
           disabled={busy || !stage}
-          className="flex-1 bg-secondary text-on-secondary text-sm font-semibold py-3 rounded-btn
-                     hover:-translate-y-0.5 transition-all disabled:opacity-40 active:scale-95"
         >
           {busy ? "..." : !stage ? "Loading..." : "🔗 Share"}
-        </button>
+        </BrandButton>
       </div>
     </div>
   );

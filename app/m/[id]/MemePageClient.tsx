@@ -2,24 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import AppNav from "@/components/ui/AppNav";
+import BrandButton from "@/components/ui/BrandButton";
+import BentoCard from "@/components/ui/BentoCard";
+import { stashRemixPreset } from "@/lib/remix";
 
 type Props = {
   memeId: string;
   imageUrl: string;
   initialCounts: Record<string, number>;
+  remixTemplateId: string;
+  remixTexts: string[];
 };
 
 const EMOJIS = ["😂", "💀", "🔥"] as const;
 
 type FloatingEmoji = { id: number; emoji: string; x: number };
 
-export default function MemePageClient({ memeId, imageUrl, initialCounts }: Props) {
+export default function MemePageClient({
+  memeId,
+  imageUrl,
+  initialCounts,
+  remixTemplateId,
+  remixTexts,
+}: Props) {
   const [counts, setCounts] = useState<Record<string, number>>(initialCounts);
   const [reacted, setReacted] = useState<Set<string>>(new Set());
   const [floating, setFloating] = useState<FloatingEmoji[]>([]);
   const [isCreator, setIsCreator] = useState(false);
   const [totalLive, setTotalLive] = useState(Object.values(initialCounts).reduce((a, b) => a + b, 0));
+  const [imgError, setImgError] = useState(false);
   const floatIdRef = useRef(0);
+
+  useEffect(() => {
+    console.log("[memeroach] imageUrl:", imageUrl);
+  }, [imageUrl]);
 
   // Check if creator via localStorage
   useEffect(() => {
@@ -79,31 +96,41 @@ export default function MemePageClient({ memeId, imageUrl, initialCounts }: Prop
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center">
-      {/* Nav */}
-      <nav className="w-full sticky top-0 z-10 bg-surface/80 backdrop-blur-glass border-b border-outline-variant">
-        <div className="max-w-page mx-auto px-4 h-12 flex items-center justify-between">
-          <a href="/" className="font-display font-bold text-secondary text-sm">🪲 Memeroach</a>
-          <a href="/" className="text-xs text-on-surface-variant hover:text-secondary transition-colors">
+    <div className="flex min-h-screen flex-col items-center bg-surface">
+      <AppNav
+        right={
+          <a
+            href="/"
+            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+          >
             Make your own →
           </a>
-        </div>
-      </nav>
+        }
+      />
 
-      {/* Meme image */}
       <div className="w-full max-w-lg px-4 pt-6 pb-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt="Meme"
-          className="w-full rounded-bento shadow-float"
-        />
+        {imgError || !imageUrl ? (
+          <div className="flex w-full items-center justify-center rounded-bento border border-outline-variant bg-surface-container p-12 text-center">
+            <div>
+              <p className="text-2xl mb-2">🪲</p>
+              <p className="text-sm text-on-surface-variant">Image failed to load.</p>
+              <p className="mt-1 text-xs text-on-surface-variant break-all opacity-60">{imageUrl ?? "no URL"}</p>
+            </div>
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt="Meme"
+            className="w-full rounded-bento shadow-float"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
-      {/* Reaction bar */}
       <div className="w-full max-w-lg px-4 py-4">
-        <div className="bg-surface-container border border-outline-variant rounded-bento p-4">
-          <p className="text-label-sm uppercase tracking-widest text-on-surface-variant mb-3">React</p>
+        <BentoCard>
+          <p className="text-label-sm text-on-surface-variant mb-3">React</p>
           <div className="flex gap-3">
             {EMOJIS.map((emoji) => (
               <button
@@ -124,13 +151,12 @@ export default function MemePageClient({ memeId, imageUrl, initialCounts }: Prop
               </button>
             ))}
           </div>
-        </div>
+        </BentoCard>
       </div>
 
-      {/* Creator panel */}
       {isCreator && (
         <div className="w-full max-w-lg px-4 pb-4">
-          <div className="bg-surface-container border border-secondary/30 rounded-bento p-4 relative overflow-hidden">
+          <BentoCard className="relative overflow-hidden border-secondary/30">
             {/* Floating emojis */}
             {floating.map((f) => (
               <span
@@ -148,16 +174,27 @@ export default function MemePageClient({ memeId, imageUrl, initialCounts }: Prop
             </div>
             <p className="font-display font-bold text-on-surface text-2xl">{totalLive}</p>
             <p className="text-on-surface-variant text-xs mt-0.5">reactions and counting</p>
-          </div>
+          </BentoCard>
         </div>
       )}
 
-      {/* CTA */}
-      <div className="w-full max-w-lg px-4 pb-10">
+      <div className="w-full max-w-lg space-y-3 px-4 pb-10">
+        {remixTemplateId && remixTexts.length > 0 && (
+          <BrandButton
+            fullWidth
+            variant="outline"
+            onClick={() => {
+              stashRemixPreset({ templateId: remixTemplateId, texts: remixTexts });
+              window.location.href = "/";
+            }}
+          >
+            ♻️ Remix with your photo
+          </BrandButton>
+        )}
         <a
           href="/"
-          className="block w-full text-center bg-secondary text-on-secondary font-semibold py-3 rounded-btn
-                     hover:-translate-y-0.5 transition-all active:scale-95"
+          className="flex min-h-11 w-full items-center justify-center rounded-btn bg-secondary font-semibold
+                     text-on-secondary transition-all hover:-translate-y-0.5 active:scale-95"
         >
           Make your own meme →
         </a>

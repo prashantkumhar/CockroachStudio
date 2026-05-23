@@ -58,13 +58,14 @@ Key file: `components/UploadZone.tsx`
 ## Screen 2 — Suggesting (`phase: "suggesting"`)
 
 ```
-app/page.tsx (useEffect)    /api/suggest/route.ts       lib/gemini.ts
+app/page.tsx (useEffect)    /api/suggest/route.ts       lib/llm.ts
  │                               │                           │
  │  POST { imageBase64, mime }   │                           │
  │ ────────────────────────────► │                           │
  │                               │  getSuggestions(img)      │
  │                               │ ─────────────────────────►│
  │                               │                           │  Gemini 2.0 Flash
+ │                               │                           │  via OpenRouter
  │                               │                           │  ← system prompt
  │                               │                           │    (from meme-themes.ts)
  │                               │                           │  ← image (base64)
@@ -78,8 +79,8 @@ While waiting: `LoadingScreen` shows skeleton cards + rotating funny messages.
 
 Key files:
 - `app/page.tsx` — fires fetch on phase change, calls `store.setSuggestions` on response
-- `app/api/suggest/route.ts` — server-side proxy (keeps GEMINI_API_KEY server-only)
-- `lib/gemini.ts` — builds system prompt from `lib/meme-themes.ts`, calls Gemini, validates with Zod
+- `app/api/suggest/route.ts` — server-side proxy (keeps OPENROUTER_API_KEY server-only)
+- `lib/llm.ts` — builds system prompt from `lib/meme-themes.ts`, calls Gemini via OpenRouter, validates with Zod
 - `lib/meme-themes.ts` — 34 cultural themes injected into the system prompt
 - `components/LoadingScreen.tsx` — skeleton UI during the wait
 
@@ -193,9 +194,9 @@ Never duplicate render logic. LLM returns `{ templateId, texts[] }` only.
 ```
 lib/meme-themes.ts
   └─ buildCulturalContext()
-       └─ lib/gemini.ts (system prompt builder)
+       └─ lib/llm.ts (system prompt builder)
             └─ /api/suggest (called on each upload)
-                 └─ Gemini 2.0 Flash reads the photo
+                 └─ Gemini 2.0 Flash via OpenRouter reads the photo
                       └─ picks themes + templates from the library
                            └─ returns 6 { templateId, texts[], tone }
 ```
@@ -228,10 +229,13 @@ components/
 
 lib/
   store.ts                    Zustand state machine (all phases + data)
-  meme-themes.ts              34 cultural themes → feeds Gemini prompt
+  meme-themes.ts              34 cultural themes → feeds LLM prompt
   templates/index.ts          7 canvas layout blueprints
   renderMeme.ts               Shared canvas renderer (preview + export)
-  gemini.ts                   Gemini client + system prompt builder
+  llm.ts                      OpenRouter/Gemini client + system prompt builder
+  remix.ts                    Stash/consume remix preset across routes
+  processImageFile.ts         File validation, MIME check, clipboard helpers
   supabase/client.ts          Browser Supabase client
   supabase/server.ts          Server Supabase client
+  supabase/../schema.sql      DB tables, RLS policies, Realtime setup
 ```

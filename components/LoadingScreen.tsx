@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AppNav from "@/components/ui/AppNav";
 
 const MESSAGES = [
   "Consulting the council of memes...",
@@ -26,39 +27,39 @@ export default function LoadingScreen() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 bg-surface">
-      {/* Spinner */}
-      <div className="mb-8 relative">
-        <div className="w-16 h-16 rounded-full border-4 border-outline-variant border-t-secondary animate-spin" />
-        <span className="absolute inset-0 flex items-center justify-center text-2xl">🪲</span>
-      </div>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <AppNav showThemeToggle={false} />
 
-      {/* Rotating message */}
-      <p
-        key={msgIndex}
-        className="font-display font-semibold text-on-surface text-lg text-center max-w-xs
-                   animate-in fade-in duration-300"
-      >
-        {MESSAGES[msgIndex]}
-      </p>
-      <p className="text-on-surface-variant text-sm mt-2">This takes about 5 seconds</p>
+      <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8">
+        <div className="relative mb-8">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-outline-variant border-t-secondary" />
+          <span className="absolute inset-0 flex items-center justify-center text-2xl">🪲</span>
+        </div>
 
-      {/* Skeleton grid */}
-      <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl px-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-bento border border-outline-variant bg-surface-container overflow-hidden"
-            style={{ animationDelay: `${i * 80}ms` }}
-          >
-            <div className="aspect-square bg-surface-container-high animate-pulse" />
-            <div className="p-3 space-y-2">
-              <div className="h-3 rounded-pill bg-surface-container-high animate-pulse w-3/4" />
-              <div className="h-2.5 rounded-pill bg-surface-container-high animate-pulse w-1/2" />
+        <p
+          key={msgIndex}
+          className="animate-fade-in max-w-xs text-center font-display text-lg font-semibold text-on-surface"
+        >
+          {MESSAGES[msgIndex]}
+        </p>
+        <p className="mt-2 text-sm text-on-surface-variant">This takes about 5 seconds</p>
+
+        <div className="mt-12 grid w-full max-w-2xl grid-cols-1 gap-bento-gap px-4 sm:grid-cols-2 lg:grid-cols-12">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-bento border border-outline-variant bg-surface-container lg:col-span-4"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <div className="aspect-square animate-pulse bg-surface-container-high" />
+              <div className="space-y-2 p-3">
+                <div className="h-3 w-3/4 animate-pulse rounded-pill bg-surface-container-high" />
+                <div className="h-2.5 w-1/2 animate-pulse rounded-pill bg-surface-container-high" />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }

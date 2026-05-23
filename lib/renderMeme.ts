@@ -47,19 +47,39 @@ function drawTextSlot(
   const lineHeight = slot.fontSize * 1.2;
   const totalHeight = lines.length * lineHeight;
   const cx = slot.anchorX * canvasWidth;
-  const cy = slot.anchorY * canvasHeight - totalHeight / 2 + lineHeight / 2;
+  const MARGIN = 6;
+  // Clamp so the text block never spills past either canvas edge.
+  const cy = Math.min(
+    Math.max(
+      slot.anchorY * canvasHeight - totalHeight / 2 + lineHeight / 2,
+      MARGIN + lineHeight / 2,                              // top bound
+    ),
+    canvasHeight - totalHeight + lineHeight / 2 - MARGIN,  // bottom bound
+  );
+
+  ctx.shadowColor = "rgba(0,0,0,0.65)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
 
   lines.forEach((line, i) => {
     const y = cy + i * lineHeight;
     if (slot.stroke && slot.stroke !== "transparent" && slot.strokeWidth > 0) {
+      ctx.shadowColor = "transparent"; // stroke draws its own depth via strokeText
       ctx.strokeStyle = slot.stroke;
       ctx.lineWidth = slot.strokeWidth * 2;
       ctx.lineJoin = "round";
       ctx.strokeText(line, cx, y);
+      ctx.shadowColor = "rgba(0,0,0,0.65)";
     }
     ctx.fillStyle = slot.fill;
     ctx.fillText(line, cx, y);
   });
+
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 
   ctx.restore();
 }
