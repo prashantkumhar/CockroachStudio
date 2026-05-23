@@ -1,4 +1,4 @@
-# Memeroach
+# Memeroach 
 
 A meme maker that doesn't suck. Like a cockroach, a good meme survives everything and spreads everywhere. Upload a photo, get six AI-generated meme ideas tailored to what's actually in the picture, edit one on a tactile canvas, share it with a link, and watch the reactions roll in live.
 
