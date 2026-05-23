@@ -1,5 +1,5 @@
 import type { RenderConfig } from "./renderMeme";
-import { drawTextSlot } from "./renderMeme";
+import { drawTextSlot, resolveTextSlot } from "./renderMeme";
 
 const GIF_MAX_WIDTH = 420;
 const FRAMES_PER_SLOT = 10;
@@ -9,7 +9,7 @@ const HOLD_DELAY = 1800;
 
 export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
   const { GIFEncoder, quantize, applyPalette } = await import("gifenc");
-  const { template, imageDataUrl, texts, cartoonize } = config;
+  const { template, imageDataUrl, texts, textStyles, cartoonize } = config;
 
   const scale = Math.min(GIF_MAX_WIDTH / template.canvasWidth, 1);
   const W = Math.round(template.canvasWidth * scale);
@@ -33,14 +33,29 @@ export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
   });
 
   const { x, y, width, height, fit } = template.imageLayout;
-  const dx = x * W, dy = y * H, dw = width * W, dh = height * H;
+  const dx = x * W,
+    dy = y * H,
+    dw = width * W,
+    dh = height * H;
   if (fit === "cover") {
     const s = Math.max(dw / img.width, dh / img.height);
-    const sw = dw / s, sh = dh / s;
-    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, dx, dy, dw, dh);
+    const sw = dw / s,
+      sh = dh / s;
+    ctx.drawImage(
+      img,
+      (img.width - sw) / 2,
+      (img.height - sh) / 2,
+      sw,
+      sh,
+      dx,
+      dy,
+      dw,
+      dh,
+    );
   } else {
     const s = Math.min(dw / img.width, dh / img.height);
-    const sw = img.width * s, sh = img.height * s;
+    const sw = img.width * s,
+      sh = img.height * s;
     ctx.drawImage(img, dx + (dw - sw) / 2, dy + (dh - sh) / 2, sw, sh);
   }
 
@@ -49,7 +64,15 @@ export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
     const { cartoonizePixels } = await import("./cartoonize");
     const raw = ctx.getImageData(0, 0, W, H);
     const filtered = cartoonizePixels(raw.data, W, H);
-    ctx.putImageData(new ImageData(new Uint8ClampedArray(filtered.buffer as ArrayBuffer), W, H), 0, 0);
+    ctx.putImageData(
+      new ImageData(
+        new Uint8ClampedArray(filtered.buffer as ArrayBuffer),
+        W,
+        H,
+      ),
+      0,
+      0,
+    );
   }
 
   const basePixels = ctx.getImageData(0, 0, W, H);
@@ -80,12 +103,14 @@ export async function renderMemeGif(config: RenderConfig): Promise<Blob> {
       }
 
       if (ratio > 0) {
-        const scaledSlot = {
-          ...slot,
-          fontSize: Math.round(slot.fontSize * scale),
-          strokeWidth: slot.strokeWidth * scale,
-        };
-        drawTextSlot(ctx, scaledSlot, text.slice(0, Math.ceil(text.length * ratio)), W, H);
+        const scaledSlot = resolveTextSlot(slot, textStyles?.[si], scale);
+        drawTextSlot(
+          ctx,
+          scaledSlot,
+          text.slice(0, Math.ceil(text.length * ratio)),
+          W,
+          H,
+        );
       }
     }
 

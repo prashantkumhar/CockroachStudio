@@ -34,8 +34,10 @@ export default function MemePageClient({
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgSrc, setImgSrc] = useState(imageUrl);
-  const imgRef   = useRef<HTMLImageElement>(null);
-  const imgRetry = useRef(0);
+  const imgRef      = useRef<HTMLImageElement>(null);
+  const imgRetry    = useRef(0);
+  // Tracks emojis we already counted optimistically so the Realtime echo is ignored
+  const pendingRef  = useRef<Set<string>>(new Set());
 
   // SSR hydration race: image may already be loaded before onLoad is attached
   useEffect(() => {
@@ -68,12 +70,19 @@ export default function MemePageClient({
         { event: "INSERT", schema: "public", table: "reactions", filter: `meme_id=eq.${memeId}` },
         (payload) => {
           const emoji = payload.new.emoji as string;
+
+          // If we triggered this reaction ourselves (optimistic update already
+          // incremented the count), swallow the echo so it isn't counted twice.
+          if (pendingRef.current.has(emoji)) {
+            pendingRef.current.delete(emoji);
+            return;
+          }
+
           setCounts((prev) => ({ ...prev, [emoji]: (prev[emoji] ?? 0) + 1 }));
           setTotalLive((t) => t + 1);
 
-          // Float emoji up the screen
           const id = floatIdRef.current++;
-          const x = 20 + Math.random() * 60; // random horizontal %
+          const x = 20 + Math.random() * 60;
           setFloating((prev) => [...prev, { id, emoji, x }]);
           setTimeout(() => setFloating((prev) => prev.filter((f) => f.id !== id)), 1800);
         }
@@ -88,8 +97,8 @@ export default function MemePageClient({
     setReacted((prev) => new Set([...prev, emoji]));
     setCounts((prev) => ({ ...prev, [emoji]: (prev[emoji] ?? 0) + 1 }));
     setTotalLive((t) => t + 1);
+    pendingRef.current.add(emoji); // tell Realtime handler to swallow the echo
 
-    // Optimistic float
     const id = floatIdRef.current++;
     const x = 20 + Math.random() * 60;
     setFloating((prev) => [...prev, { id, emoji, x }]);
@@ -103,6 +112,7 @@ export default function MemePageClient({
       });
     } catch {
       // Rollback on failure
+      pendingRef.current.delete(emoji);
       setReacted((prev) => { const n = new Set(prev); n.delete(emoji); return n; });
       setCounts((prev) => ({ ...prev, [emoji]: Math.max(0, (prev[emoji] ?? 1) - 1) }));
       setTotalLive((t) => Math.max(0, t - 1));

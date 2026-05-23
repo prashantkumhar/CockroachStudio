@@ -66,7 +66,7 @@ export const templates: MemeTemplate[] = [
     name: "Classic Top/Bottom",
     canvasWidth: 600,
     canvasHeight: 600,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 1 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 1 },
     slots: [
       impactOverlay({ id: "top",    anchorY: 0.07, fontSize: 52, placeholder: "TOP TEXT" }),
       impactOverlay({ id: "bottom", anchorY: 0.93, fontSize: 52, placeholder: "BOTTOM TEXT" }),
@@ -80,7 +80,7 @@ export const templates: MemeTemplate[] = [
     name: "Bottom Caption",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.82 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.82 },
     slots: [
       {
         id: "caption",
@@ -106,7 +106,7 @@ export const templates: MemeTemplate[] = [
     name: "POV:",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "cover", x: 0, y: 0.175, width: 1, height: 0.825 },
+    imageLayout: { fit: "contain", x: 0, y: 0.175, width: 1, height: 0.825 },
     slots: [
       impactDark({
         id: "pov-text",
@@ -126,7 +126,7 @@ export const templates: MemeTemplate[] = [
     name: "When You...",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.78 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.78 },
     slots: [
       {
         id: "setup",
@@ -166,7 +166,7 @@ export const templates: MemeTemplate[] = [
     name: "Caption Above",
     canvasWidth: 600,
     canvasHeight: 720,
-    imageLayout: { fit: "cover", x: 0, y: 0.24, width: 1, height: 0.76 },
+    imageLayout: { fit: "contain", x: 0, y: 0.24, width: 1, height: 0.76 },
     slots: [
       {
         id: "caption",
@@ -189,14 +189,14 @@ export const templates: MemeTemplate[] = [
   // Cover image fills top 70 %; three escalating captions in the strip below.
   {
     id: "panel-zoom",
-    name: "3-Panel Escalate",
+    name: "3-Beat Crash",
     canvasWidth: 600,
     canvasHeight: 580,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.70 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.70 },
     slots: [
-      impactDark({ id: "p1", anchorX: 0.17, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "looks fine" }),
-      impactDark({ id: "p2", anchorX: 0.50, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "ships anyway" }),
-      impactDark({ id: "p3", anchorX: 0.83, anchorY: 0.845, width: 0.30, fontSize: 26, placeholder: "EVERYTHING'S FINE" }),
+      impactDark({ id: "p1", anchorX: 0.17, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "this is calm" }),
+      impactDark({ id: "p2", anchorX: 0.50, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "this is weird" }),
+      impactDark({ id: "p3", anchorX: 0.83, anchorY: 0.845, width: 0.30, fontSize: 26, placeholder: "this is a disaster" }),
     ],
   },
 
@@ -206,10 +206,10 @@ export const templates: MemeTemplate[] = [
   // the punchline gets the visual weight.
   {
     id: "nobody-nobody",
-    name: "Nobody:",
+    name: "Silence... Then Me",
     canvasWidth: 600,
     canvasHeight: 740,
-    imageLayout: { fit: "cover", x: 0, y: 0.26, width: 1, height: 0.58 },
+    imageLayout: { fit: "contain", x: 0, y: 0.26, width: 1, height: 0.58 },
     slots: [
       {
         id: "nobody",

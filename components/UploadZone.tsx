@@ -16,15 +16,75 @@ import {
   validateImageFile,
 } from "@/lib/processImageFile";
 
+const FUNNY_PROMPTS = [
+  {
+    emoji: "🫠",
+    label: "Self-roast",
+    prompt:
+      "Go for self-roast humor where the speaker is obviously the problem and the joke feels embarrassingly honest.",
+  },
+  {
+    emoji: "🎭",
+    label: "Expectation vs reality",
+    prompt:
+      "Use expectation-vs-reality humor with confident setup and an embarrassing outcome.",
+  },
+  {
+    emoji: "🚨",
+    label: "Overreaction",
+    prompt:
+      "Treat a tiny inconvenience like a full-scale disaster for comedic effect.",
+  },
+  {
+    emoji: "😬",
+    label: "Social awkwardness",
+    prompt:
+      "Lean into awkward timing, fake smiles, getting caught, and painfully relatable social discomfort.",
+  },
+  {
+    emoji: "🤐",
+    label: "Hidden truth",
+    prompt:
+      "Write the joke like an unspoken truth everyone thinks but nobody admits out loud.",
+  },
+  {
+    emoji: "💥",
+    label: "Instant regret",
+    prompt:
+      "Start bold and confident, then make the punchline immediate regret or collapse.",
+  },
+  {
+    emoji: "😈",
+    label: "Villain energy",
+    prompt:
+      "Make the subject feel hilariously annoying, petty, or slightly evil in a funny way.",
+  },
+  {
+    emoji: "📈",
+    label: "Absurd escalation",
+    prompt:
+      "Start normal and escalate the caption into something increasingly unhinged.",
+  },
+] as const;
+
 export default function UploadZone() {
   const setImage = useStore((s) => s.setImage);
+  const setPromptContext = useStore((s) => s.setPromptContext);
   const remixPreset = useStore((s) => s.remixPreset);
   const storeError = useStore((s) => s.error);
   const setStoreError = useStore((s) => s.setError);
+  const storedPromptContext = useStore((s) => s.promptContext);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pasteHint, setPasteHint] = useState<string | null>(null);
   const [webcamOpen, setWebcamOpen] = useState(false);
+  const [selectedPromptLabel, setSelectedPromptLabel] = useState<string | null>(
+    () =>
+      storedPromptContext
+        ? (FUNNY_PROMPTS.find((p) => p.prompt === storedPromptContext)?.label ??
+          null)
+        : null,
+  );
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
@@ -36,11 +96,11 @@ export default function UploadZone() {
         const compressed = await compressImageDataUrl(dataUrl);
         setImage(compressed.dataUrl);
       } catch (err) {
-        console.error("[upload] compress", err);
+        console.warn("[upload] compress", err);
         setError("Could not process that image. Try another photo.");
       }
     },
-    [setImage, setStoreError]
+    [setImage, setStoreError],
   );
 
   const processFile = useCallback(
@@ -57,7 +117,20 @@ export default function UploadZone() {
         setError("Could not read that image. Try another file.");
       }
     },
-    [applyDataUrl]
+    [applyDataUrl],
+  );
+
+  const handlePromptSelect = useCallback(
+    (label: string, prompt: string) => {
+      if (selectedPromptLabel === label) {
+        setSelectedPromptLabel(null);
+        setPromptContext(null);
+      } else {
+        setSelectedPromptLabel(label);
+        setPromptContext(prompt);
+      }
+    },
+    [selectedPromptLabel, setPromptContext],
   );
 
   const onDrop = useCallback(
@@ -67,7 +140,7 @@ export default function UploadZone() {
       const file = e.dataTransfer.files[0];
       if (file) processFile(file);
     },
-    [processFile]
+    [processFile],
   );
 
   const onFileChange = useCallback(
@@ -76,7 +149,7 @@ export default function UploadZone() {
       if (file) processFile(file);
       e.target.value = "";
     },
-    [processFile]
+    [processFile],
   );
 
   useEffect(() => {
@@ -135,25 +208,66 @@ export default function UploadZone() {
           }
           description={
             remixPreset
-              ? "Remix mode — add your photo and we’ll reuse the same template & captions."
-              : "Drop, paste, or snap a photo. AI picks 6 formats. You pick one."
+              ? "Remix mode — add your photo and we'll reuse the same template & captions."
+              : "Drop, paste, or snap a photo. We&apos;ll open it straight in the editor."
           }
         />
 
         {remixPreset && (
           <p className="mt-4 rounded-bento border border-tertiary/40 bg-tertiary-container/30 px-4 py-2 text-center text-sm text-tertiary">
-            ♻️ Remixing: <span className="font-semibold">{remixPreset.templateId}</span> template
+            ♻️ Remixing:{" "}
+            <span className="font-semibold">{remixPreset.templateId}</span>{" "}
+            template
           </p>
+        )}
+
+        {/* Prompt context selector */}
+        {!remixPreset && (
+          <div className="mt-6 w-full max-w-lg">
+            <p className="text-xs text-on-surface-variant mb-2.5 text-center">
+              Optional: pick a humor mode to guide the AI →
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {FUNNY_PROMPTS.map(({ emoji, label, prompt }) => {
+                const isSelected = selectedPromptLabel === label;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handlePromptSelect(label, prompt)}
+                    className={[
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-pill border text-sm transition-all",
+                      isSelected
+                        ? "bg-secondary text-on-secondary border-secondary"
+                        : "bg-surface-container border-outline-variant text-on-surface-variant hover:border-secondary hover:text-on-surface active:scale-95",
+                    ].join(" ")}
+                  >
+                    {emoji} {label}
+                    {isSelected && (
+                      <span className="ml-0.5 text-xs opacity-80">✕</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedPromptLabel && (
+              <p className="mt-2.5 text-center text-xs text-secondary">
+                "{selectedPromptLabel}" mode selected — now drop your photo
+              </p>
+            )}
+          </div>
         )}
 
         <BentoCard
           as="article"
           className={[
-            "mt-8 w-full max-w-lg cursor-pointer select-none overflow-hidden p-0",
+            "mt-6 w-full max-w-lg cursor-pointer select-none overflow-hidden p-0",
             "border-2 border-dashed transition-all duration-200",
             dragging
               ? "scale-[1.01] border-secondary bg-surface-container-high"
-              : "border-outline-variant hover:border-outline hover:bg-surface-container-high",
+              : selectedPromptLabel
+                ? "border-secondary/50 hover:border-secondary hover:bg-surface-container-high"
+                : "border-outline-variant hover:border-outline hover:bg-surface-container-high",
           ].join(" ")}
         >
           <div
@@ -258,9 +372,11 @@ export default function UploadZone() {
           onChange={onFileChange}
         />
 
-        <p className="mt-8 max-w-sm text-center text-xs text-on-surface-variant">
-          Works best with photos of people, situations, or anything with a story.
-          Desktop: drag a file or paste a screenshot. Phone: use Camera for the native lens.
+        <p className="mt-6 max-w-sm text-center text-xs text-on-surface-variant">
+          Works best with photos of people, situations, or anything with a
+          story. Desktop: drag a file or paste a screenshot. Phone: use Camera
+          for the native lens. AI suggestions are mocked for now, so you&apos;ll go
+          straight to editing.
         </p>
       </main>
 

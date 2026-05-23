@@ -1,6 +1,12 @@
 import { create } from "zustand";
 
-export type Phase = "upload" | "suggesting" | "picking" | "editing" | "exporting" | "shared";
+export type Phase =
+  | "upload"
+  | "suggesting"
+  | "picking"
+  | "editing"
+  | "exporting"
+  | "shared";
 
 export type Suggestion = {
   templateId: string;
@@ -29,21 +35,27 @@ type Store = {
   phase: Phase;
   imageDataUrl: string | null;
   suggestions: Suggestion[];
+  usedFallbackSuggestions: boolean;
   selectedIndex: number;
   layers: TextLayer[];
   creatorToken: string | null;
   sharedMemeId: string | null;
   remixPreset: RemixPreset | null;
+  promptContext: string | null;
   error: string | null;
 
   setPhase: (phase: Phase) => void;
   setImage: (dataUrl: string) => void;
-  setSuggestions: (suggestions: Suggestion[]) => void;
+  setSuggestions: (
+    suggestions: Suggestion[],
+    usedFallbackSuggestions?: boolean,
+  ) => void;
   selectSuggestion: (index: number) => void;
   setLayers: (layers: TextLayer[]) => void;
   updateLayer: (id: string, updates: Partial<TextLayer>) => void;
   setShared: (memeId: string, creatorToken: string) => void;
   setRemixPreset: (preset: RemixPreset | null) => void;
+  setPromptContext: (context: string | null) => void;
   setError: (error: string | null) => void;
   reset: () => void;
 };
@@ -52,11 +64,13 @@ const initialState = {
   phase: "upload" as Phase,
   imageDataUrl: null,
   suggestions: [],
+  usedFallbackSuggestions: false,
   selectedIndex: 0,
   layers: [],
   creatorToken: null,
   sharedMemeId: null,
   remixPreset: null,
+  promptContext: null,
   error: null,
 };
 
@@ -80,7 +94,13 @@ export const useStore = create<Store>((set) => ({
       return { imageDataUrl: dataUrl, phase: "suggesting" };
     }),
 
-  setSuggestions: (suggestions) => set({ suggestions, phase: "picking" }),
+  setSuggestions: (suggestions, usedFallbackSuggestions = false) =>
+    set({
+      suggestions,
+      usedFallbackSuggestions,
+      phase: "picking",
+      promptContext: null,
+    }),
 
   selectSuggestion: (index) => set({ selectedIndex: index, phase: "editing" }),
 
@@ -95,6 +115,8 @@ export const useStore = create<Store>((set) => ({
     set({ sharedMemeId, creatorToken, phase: "shared" }),
 
   setRemixPreset: (remixPreset) => set({ remixPreset }),
+
+  setPromptContext: (promptContext) => set({ promptContext }),
 
   setError: (error) => set({ error }),
 

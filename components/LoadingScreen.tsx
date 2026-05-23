@@ -5,17 +5,19 @@ import AppNav from "@/components/ui/AppNav";
 import { useStore } from "@/lib/store";
 
 const MESSAGES = [
-  "Consulting the council of memes...",
-  "Loading Indian internet culture...",
-  "Cross-referencing 47 subreddits...",
-  "Analyzing your photo's cringe potential...",
-  "Asking Sharma Ji Ka Beta for ideas...",
-  "Summoning the roach gods...",
-  "Translating feelings into Impact font...",
-  "Bribing the algorithm...",
-  "Running vibes check on your photo...",
-  "Checking if this is LinkedIn-post-worthy...",
+  "Reading reaction energy...",
+  "Matching the strongest meme formats...",
+  "Writing sharper caption angles...",
+  "Trying not to make it cringe...",
+  "Testing whether this deserves group chat forwarding...",
+  "Turning expressions into punchlines...",
 ];
+
+const PROGRESS_STEPS = [
+  "Analyzing the image",
+  "Picking the best meme formats",
+  "Writing caption options",
+] as const;
 
 export default function LoadingScreen() {
   const [msgIndex, setMsgIndex] = useState(0);
@@ -25,9 +27,11 @@ export default function LoadingScreen() {
   useEffect(() => {
     const id = setInterval(() => {
       setMsgIndex((i) => (i + 1) % MESSAGES.length);
-    }, 2000);
+    }, 1600);
     return () => clearInterval(id);
   }, []);
+
+  const activeStep = Math.min(PROGRESS_STEPS.length - 1, msgIndex % (PROGRESS_STEPS.length + 1));
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
@@ -67,17 +71,68 @@ export default function LoadingScreen() {
         ) : (
           <div className="relative mb-8">
             <div className="h-16 w-16 animate-spin rounded-full border-4 border-outline-variant border-t-secondary" />
-            <span className="absolute inset-0 flex items-center justify-center text-2xl">🪲</span>
+            <span className="absolute inset-0 flex items-center justify-center text-2xl">
+              🪲
+            </span>
           </div>
         )}
 
-        <p
-          key={msgIndex}
-          className="animate-fade-in max-w-xs text-center font-display text-lg font-semibold text-on-surface"
-        >
-          {MESSAGES[msgIndex]}
-        </p>
-        <p className="mt-2 text-sm text-on-surface-variant">This takes about 5 seconds</p>
+        <div className="max-w-md rounded-bento border border-outline-variant bg-surface-container px-5 py-4 text-center shadow-float">
+          <p className="font-display text-xl font-semibold text-on-surface">
+            Generating meme directions...
+          </p>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            We&apos;re reading the image, choosing formats, and writing captions.
+          </p>
+
+          <div className="mt-4 space-y-2 text-left">
+            {PROGRESS_STEPS.map((step, index) => {
+              const isDone = index < activeStep;
+              const isActive = index === activeStep;
+              return (
+                <div
+                  key={step}
+                  className={[
+                    "flex items-center gap-3 rounded-btn border px-3 py-2 transition-colors",
+                    isActive
+                      ? "border-secondary/50 bg-secondary-container/15"
+                      : isDone
+                        ? "border-tertiary/30 bg-tertiary-container/10"
+                        : "border-outline-variant bg-surface-container-high/50",
+                  ].join(" ")}
+                >
+                  <span
+                    className={[
+                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                      isDone
+                        ? "bg-tertiary text-on-tertiary"
+                        : isActive
+                          ? "bg-secondary text-on-secondary"
+                          : "bg-surface-container-highest text-on-surface-variant",
+                    ].join(" ")}
+                  >
+                    {isDone ? "✓" : index + 1}
+                  </span>
+                  <span
+                    className={[
+                      "text-sm",
+                      isActive || isDone ? "text-on-surface" : "text-on-surface-variant",
+                    ].join(" ")}
+                  >
+                    {step}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p
+            key={msgIndex}
+            className="mt-4 animate-fade-in text-xs text-on-surface-variant"
+          >
+            {MESSAGES[msgIndex]}
+          </p>
+        </div>
 
         {/* Skeleton suggestion cards */}
         <div className="mt-12 grid w-full max-w-2xl grid-cols-1 gap-bento-gap px-4 sm:grid-cols-2 lg:grid-cols-12">
@@ -86,7 +141,10 @@ export default function LoadingScreen() {
               key={i}
               className="overflow-hidden rounded-bento border border-outline-variant bg-surface-container lg:col-span-4"
             >
-              <div className="aspect-square animate-pulse bg-surface-container-high" />
+              <div className="relative aspect-square animate-pulse bg-surface-container-high">
+                <div className="absolute inset-x-3 top-3 h-4 rounded-pill bg-surface-container-highest/80" />
+                <div className="absolute inset-x-6 bottom-4 h-4 rounded-pill bg-surface-container-highest/80" />
+              </div>
               <div className="space-y-2 p-3">
                 <div className="h-3 w-3/4 animate-pulse rounded-pill bg-surface-container-high" />
                 <div className="h-2.5 w-1/2 animate-pulse rounded-pill bg-surface-container-high" />

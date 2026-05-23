@@ -11,7 +11,9 @@ import AppNav from "@/components/ui/AppNav";
 import type { Suggestion } from "@/lib/llm";
 
 // Konva must never run on the server
-const MemeEditor = dynamic(() => import("@/components/MemeEditor"), { ssr: false });
+const MemeEditor = dynamic(() => import("@/components/MemeEditor"), {
+  ssr: false,
+});
 
 // Maps each phase to the history state key we push when entering it.
 const PHASE_HISTORY: Record<string, string> = {
@@ -22,7 +24,7 @@ const PHASE_HISTORY: Record<string, string> = {
 };
 
 export default function Home() {
-  const phase        = useStore((s) => s.phase);
+  const phase = useStore((s) => s.phase);
   const imageDataUrl = useStore((s) => s.imageDataUrl);
 
   const suggestingFor = useRef<string | null>(null);
@@ -38,9 +40,15 @@ export default function Home() {
 
   useEffect(() => {
     function onPopState() {
-      const { phase: currentPhase, setPhase, reset } = useStore.getState();
+      const {
+        phase: currentPhase,
+        setPhase,
+        reset,
+        setPromptContext,
+      } = useStore.getState();
       if (currentPhase === "picking" || currentPhase === "suggesting") {
         setPhase("upload");
+        setPromptContext(null);
       } else if (currentPhase === "editing") {
         setPhase("picking");
       } else if (currentPhase === "shared") {
@@ -61,7 +69,8 @@ export default function Home() {
 
     // Pull actions from the store directly — they are stable references and
     // don't need to be deps, which keeps the deps array a fixed size.
-    const { setSuggestions, setPhase, setError } = useStore.getState();
+    const { setSuggestions, setPhase, setError, promptContext } =
+      useStore.getState();
 
     const [meta, base64] = imageDataUrl.split(";base64,");
     const mimeType = meta.split(":")[1];
@@ -69,25 +78,35 @@ export default function Home() {
     fetch("/api/suggest", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageBase64: base64, mimeType }),
+      body: JSON.stringify({
+        imageBase64: base64,
+        mimeType,
+        ...(promptContext ? { promptContext } : {}),
+      }),
     })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const err = new Error(data.error ?? `HTTP ${res.status}`) as Error & { code?: string };
+          const err = new Error(data.error ?? `HTTP ${res.status}`) as Error & {
+            code?: string;
+          };
           err.code = data.code;
           throw err;
         }
-        return data as { suggestions: Suggestion[] };
+        return data as { suggestions: Suggestion[]; fallback?: boolean };
       })
-      .then((data) => setSuggestions(data.suggestions))
+      .then((data) => setSuggestions(data.suggestions, !!data.fallback))
       .catch((err: Error & { code?: string }) => {
         console.warn("[suggest] handled error:", err.message, err.code);
         suggestingFor.current = null;
         if (err.code === "CONFIG") {
-          setError("AI is not configured on the server. Contact the site owner.");
+          setError(
+            "AI is not configured on the server. Contact the site owner.",
+          );
         } else if (err.code === "PAYLOAD_TOO_LARGE") {
-          setError("Photo is too large. Try a smaller image or retake with webcam.");
+          setError(
+            "Photo is too large. Try a smaller image or retake with webcam.",
+          );
         } else {
           setError("Couldn't generate meme ideas. Try again in a moment.");
         }
@@ -95,11 +114,11 @@ export default function Home() {
       });
   }, [phase, imageDataUrl]);
 
-  if (phase === "upload")    return <UploadZone />;
+  if (phase === "upload") return <UploadZone />;
   if (phase === "suggesting") return <LoadingScreen />;
-  if (phase === "picking")   return <PickScreen />;
-  if (phase === "editing")   return <MemeEditor />;
-  if (phase === "shared")    return <SharedScreen />;
+  if (phase === "picking") return <PickScreen />;
+  if (phase === "editing") return <MemeEditor />;
+  if (phase === "shared") return <SharedScreen />;
 
   // exporting — brief loading while uploading to Supabase
   return (
@@ -107,8 +126,12 @@ export default function Home() {
       <AppNav step={3} />
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-outline-variant border-t-secondary" />
-        <p className="font-display font-semibold text-on-surface">Uploading your masterpiece...</p>
-        <p className="text-sm text-on-surface-variant">Spreading to the internet...</p>
+        <p className="font-display font-semibold text-on-surface">
+          Uploading your masterpiece...
+        </p>
+        <p className="text-sm text-on-surface-variant">
+          Spreading to the internet...
+        </p>
       </div>
     </div>
   );

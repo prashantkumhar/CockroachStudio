@@ -10,6 +10,7 @@ import PageHeader from "@/components/ui/PageHeader";
 export default function PickScreen() {
   const imageDataUrl = useStore((s) => s.imageDataUrl);
   const suggestions = useStore((s) => s.suggestions);
+  const usedFallbackSuggestions = useStore((s) => s.usedFallbackSuggestions);
   const selectedIndex = useStore((s) => s.selectedIndex);
   const selectSuggestion = useStore((s) => s.selectSuggestion);
   const setPhase = useStore((s) => s.setPhase);
@@ -38,11 +39,22 @@ export default function PickScreen() {
           description="AI picked these based on your photo. Choose one to edit."
         />
 
+        {usedFallbackSuggestions && (
+          <div className="mt-4 rounded-bento border border-tertiary/40 bg-tertiary-container/30 px-4 py-3 text-sm text-tertiary">
+            AI suggestions were unavailable, so these are fallback meme ideas.
+            You can still edit them normally.
+          </div>
+        )}
+
         <div className="mt-8 grid grid-cols-1 gap-bento-gap sm:grid-cols-2 lg:grid-cols-12">
           {suggestions.map((suggestion, i) => {
             const template = templateMap[suggestion.templateId];
             return (
-              <div key={i} className="flex flex-col gap-2 lg:col-span-4 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <div
+                key={i}
+                className="flex flex-col gap-2 lg:col-span-4 animate-slide-up"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <MemePreview
                   templateId={suggestion.templateId}
                   imageDataUrl={imageDataUrl}

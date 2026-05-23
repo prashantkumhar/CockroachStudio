@@ -1,17 +1,41 @@
 import { MemeTemplate, TextSlot } from "./templates";
 
+export type RenderTextStyle = {
+  fontFamily?: string;
+  fontSize?: number;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+};
+
 export type RenderConfig = {
   template: MemeTemplate;
   imageDataUrl: string;
   texts: string[];
+  textStyles?: RenderTextStyle[];
   cartoonize?: boolean;
 };
+
+export function resolveTextSlot(
+  slot: TextSlot,
+  style?: RenderTextStyle,
+  scale = 1,
+): TextSlot {
+  return {
+    ...slot,
+    fontFamily: style?.fontFamily ?? slot.fontFamily,
+    fontSize: Math.round((style?.fontSize ?? slot.fontSize) * scale),
+    fill: style?.fill ?? slot.fill,
+    stroke: style?.stroke ?? slot.stroke,
+    strokeWidth: (style?.strokeWidth ?? slot.strokeWidth) * scale,
+  };
+}
 
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
-  maxLines: number
+  maxLines: number,
 ): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
@@ -36,7 +60,7 @@ export function drawTextSlot(
   slot: TextSlot,
   text: string,
   canvasWidth: number,
-  canvasHeight: number
+  canvasHeight: number,
 ) {
   ctx.save();
   ctx.font = `${slot.fontSize}px ${slot.fontFamily}`;
@@ -50,17 +74,19 @@ export function drawTextSlot(
   // Match MemeEditor's baseX logic: anchor is the centre of the text box.
   // ctx.textAlign "left" draws from cx, "right" draws back from cx, "center" centres on cx.
   const cx =
-    slot.align === "left"  ? slot.anchorX * canvasWidth - maxPx / 2 :
-    slot.align === "right" ? slot.anchorX * canvasWidth + maxPx / 2 :
-    slot.anchorX * canvasWidth;
+    slot.align === "left"
+      ? slot.anchorX * canvasWidth - maxPx / 2
+      : slot.align === "right"
+        ? slot.anchorX * canvasWidth + maxPx / 2
+        : slot.anchorX * canvasWidth;
   const MARGIN = 6;
   // Clamp so the text block never spills past either canvas edge.
   const cy = Math.min(
     Math.max(
       slot.anchorY * canvasHeight - totalHeight / 2 + lineHeight / 2,
-      MARGIN + lineHeight / 2,                              // top bound
+      MARGIN + lineHeight / 2, // top bound
     ),
-    canvasHeight - totalHeight + lineHeight / 2 - MARGIN,  // bottom bound
+    canvasHeight - totalHeight + lineHeight / 2 - MARGIN, // bottom bound
   );
 
   ctx.shadowColor = "rgba(0,0,0,0.65)";
@@ -92,9 +118,9 @@ export function drawTextSlot(
 
 export async function renderMeme(
   canvas: HTMLCanvasElement,
-  config: RenderConfig
+  config: RenderConfig,
 ): Promise<void> {
-  const { template, imageDataUrl, texts } = config;
+  const { template, imageDataUrl, texts, textStyles } = config;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -136,6 +162,12 @@ export async function renderMeme(
   // Draw text slots
   template.slots.forEach((slot, i) => {
     const text = texts[i] ?? slot.placeholder;
-    drawTextSlot(ctx, slot, text, canvas.width, canvas.height);
+    drawTextSlot(
+      ctx,
+      resolveTextSlot(slot, textStyles?.[i]),
+      text,
+      canvas.width,
+      canvas.height,
+    );
   });
 }
