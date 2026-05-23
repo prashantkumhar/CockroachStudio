@@ -48,7 +48,7 @@ export const templates: MemeTemplate[] = [
     name: "Classic Top/Bottom",
     canvasWidth: 600,
     canvasHeight: 600,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 1 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 1 },
     slots: [
       impactSlot({ id: "top", anchorX: 0.5, anchorY: 0.08, placeholder: "TOP TEXT" }),
       impactSlot({ id: "bottom", anchorX: 0.5, anchorY: 0.92, placeholder: "BOTTOM TEXT" }),
@@ -59,7 +59,7 @@ export const templates: MemeTemplate[] = [
     name: "Bottom Caption",
     canvasWidth: 600,
     canvasHeight: 650,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.85 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.85 },
     slots: [
       {
         id: "caption",
@@ -82,7 +82,7 @@ export const templates: MemeTemplate[] = [
     name: "POV:",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "cover", x: 0, y: 0.15, width: 1, height: 0.85 },
+    imageLayout: { fit: "contain", x: 0, y: 0.15, width: 1, height: 0.85 },
     slots: [
       {
         id: "pov-text",
@@ -105,7 +105,7 @@ export const templates: MemeTemplate[] = [
     name: "When You...",
     canvasWidth: 600,
     canvasHeight: 680,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.82 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.82 },
     slots: [
       {
         id: "setup",
@@ -142,7 +142,7 @@ export const templates: MemeTemplate[] = [
     name: "Caption Above",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "cover", x: 0, y: 0.25, width: 1, height: 0.75 },
+    imageLayout: { fit: "contain", x: 0, y: 0.25, width: 1, height: 0.75 },
     slots: [
       {
         id: "caption",
@@ -165,7 +165,7 @@ export const templates: MemeTemplate[] = [
     name: "3-Panel Zoom",
     canvasWidth: 600,
     canvasHeight: 220,
-    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.62 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.62 },
     slots: [
       impactSlot({ id: "p1", anchorX: 0.17, anchorY: 0.82, width: 0.28, fontSize: 20, placeholder: "Panel 1" }),
       impactSlot({ id: "p2", anchorX: 0.5, anchorY: 0.82, width: 0.28, fontSize: 20, placeholder: "Panel 2" }),
@@ -177,7 +177,7 @@ export const templates: MemeTemplate[] = [
     name: "Nobody: / Absolutely nobody:",
     canvasWidth: 600,
     canvasHeight: 720,
-    imageLayout: { fit: "cover", x: 0, y: 0.35, width: 1, height: 0.65 },
+    imageLayout: { fit: "contain", x: 0, y: 0.35, width: 1, height: 0.65 },
     slots: [
       {
         id: "nobody",

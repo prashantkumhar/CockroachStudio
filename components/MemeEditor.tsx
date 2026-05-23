@@ -111,19 +111,36 @@ export default function MemeEditor() {
   const [stage, setStage] = useState<any>(null);
   const [busy, setBusy] = useState(false);
 
-  // Cover crop for background image
-  const crop = (() => {
+  const W = template.canvasWidth;
+  const H = template.canvasHeight;
+
+  // Compute image position and optional crop for the Konva stage.
+  const imagePos = (() => {
     if (!bgImage) return null;
     const { x, y, width, height, fit } = template.imageLayout;
-    const dw = width  * template.canvasWidth;
-    const dh = height * template.canvasHeight;
+    const dw = width  * W;
+    const dh = height * H;
+    const dx = x * W;
+    const dy = y * H;
     if (fit === "cover") {
       const s  = Math.max(dw / bgImage.width, dh / bgImage.height);
       const cw = dw / s, ch = dh / s;
-      return { x: (bgImage.width - cw) / 2, y: (bgImage.height - ch) / 2, width: cw, height: ch };
+      return {
+        x: dx, y: dy, width: dw, height: dh,
+        crop: { x: (bgImage.width - cw) / 2, y: (bgImage.height - ch) / 2, width: cw, height: ch },
+      };
     }
-    const s = Math.min(dw / bgImage.width, dh / bgImage.height);
-    return { x: 0, y: 0, width: bgImage.width / s, height: bgImage.height / s };
+    // contain: scale to fit, letterbox, no source crop
+    const s  = Math.min(dw / bgImage.width, dh / bgImage.height);
+    const sw = bgImage.width  * s;
+    const sh = bgImage.height * s;
+    return {
+      x: dx + (dw - sw) / 2,
+      y: dy + (dh - sh) / 2,
+      width: sw,
+      height: sh,
+      crop: undefined,
+    };
   })();
 
   const exportDataUrl = useCallback(async (): Promise<string> => {
@@ -186,8 +203,6 @@ export default function MemeEditor() {
 
   const font  = FONTS[fontIdx].value;
   const fill  = COLORS[colorIdx].value;
-  const W     = template.canvasWidth;
-  const H     = template.canvasHeight;
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
@@ -257,14 +272,14 @@ export default function MemeEditor() {
                   <Rect x={0} y={0} width={W} height={H} fill="#f8fafc" />
 
                   {/* Photo */}
-                  {bgImage && crop && (
+                  {bgImage && imagePos && (
                     <KonvaImage
                       image={bgImage}
-                      x={template.imageLayout.x * W}
-                      y={template.imageLayout.y * H}
-                      width={template.imageLayout.width  * W}
-                      height={template.imageLayout.height * H}
-                      crop={crop}
+                      x={imagePos.x}
+                      y={imagePos.y}
+                      width={imagePos.width}
+                      height={imagePos.height}
+                      crop={imagePos.crop}
                     />
                   )}
 
