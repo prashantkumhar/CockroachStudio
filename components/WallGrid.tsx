@@ -2,12 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { memeImageApiPath } from "@/lib/memeImageUrl";
 import FadeImage from "@/components/ui/FadeImage";
 
 const PAGE_SIZE = 12;
 
-type MemeRow = { id: string; created_at: string };
+type MemeRow = { id: string; created_at: string; image_url: string };
 type ReactionMap = Record<string, number>;
 
 type Props = {
@@ -31,7 +30,7 @@ export default function WallGrid({ initialMemes, initialReactions, initialHasMor
 
     const { data: newMemes } = await supabase
       .from("memes")
-      .select("id, created_at")
+      .select("id, created_at, image_url")
       .not("image_url", "is", null)
       .lt("created_at", oldest)
       .order("created_at", { ascending: false })
@@ -85,7 +84,7 @@ export default function WallGrid({ initialMemes, initialReactions, initialHasMor
               className="group block overflow-hidden rounded-bento border border-outline-variant bg-surface-container transition-shadow hover:shadow-float"
             >
               <FadeImage
-                src={memeImageApiPath(meme.id)}
+                src={meme.image_url}
                 alt="Meme"
                 className="object-contain"
               />

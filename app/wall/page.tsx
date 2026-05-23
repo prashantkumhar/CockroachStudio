@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 12;
 
-type MemeRow = { id: string; created_at: string };
+type MemeRow = { id: string; created_at: string; image_url: string };
 type ReactionRow = { meme_id: string; emoji: string };
 
 export default async function WallPage() {
@@ -21,7 +21,7 @@ export default async function WallPage() {
   // Fetch first page — only rows with a successfully uploaded image
   const { data: memes } = await supabase
     .from("memes")
-    .select("id, created_at")
+    .select("id, created_at, image_url")
     .not("image_url", "is", null)
     .order("created_at", { ascending: false })
     .limit(PAGE_SIZE + 1); // +1 to detect if there's a next page

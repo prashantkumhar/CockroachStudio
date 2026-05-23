@@ -33,6 +33,16 @@ export default function MemePageClient({
   const [totalLive, setTotalLive] = useState(Object.values(initialCounts).reduce((a, b) => a + b, 0));
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(imageUrl);
+  const imgRef   = useRef<HTMLImageElement>(null);
+  const imgRetry = useRef(0);
+
+  // SSR hydration race: image may already be loaded before onLoad is attached
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setImgLoaded(true);
+    }
+  }, [imgSrc]);
   const [canNativeShare, setCanNativeShare] = useState(false);
   const floatIdRef = useRef(0);
 
@@ -115,17 +125,26 @@ export default function MemePageClient({
         ) : (
           <div className="relative w-full">
             {!imgLoaded && (
-              <div className="w-full aspect-square rounded-bento bg-surface-container-high animate-pulse flex items-center justify-center">
-                <span className="text-4xl opacity-30">🪲</span>
+              <div className="w-full aspect-square rounded-bento bg-surface-container-high flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full border-2 border-outline-variant border-t-secondary animate-spin" />
               </div>
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={imageUrl}
+              ref={imgRef}
+              key={imgSrc}
+              src={imgSrc}
               alt="Meme"
-              className={`w-full rounded-bento shadow-float transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "absolute inset-0 opacity-0"}`}
+              className={`w-full rounded-bento shadow-float ${imgLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
               onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (imgRetry.current < 4) {
+                  imgRetry.current += 1;
+                  setTimeout(() => setImgSrc(`${imageUrl}?_r=${imgRetry.current}`), 1500 * imgRetry.current);
+                } else {
+                  setImgError(true);
+                }
+              }}
             />
           </div>
         )}

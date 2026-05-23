@@ -16,14 +16,15 @@ export async function POST(req: NextRequest) {
     const creatorToken = nanoid(16);
 
     // Convert data URL to Buffer
-    const base64 = pngDataUrl.split(";base64,")[1];
+    const [meta, base64] = pngDataUrl.split(";base64,");
+    const mimeType = meta.split(":")[1] ?? "image/jpeg";
+    const ext = mimeType === "image/png" ? "png" : "jpg";
     const buffer = Buffer.from(base64, "base64");
-    const fileName = `${id}.png`;
+    const fileName = `${id}.${ext}`;
 
-    // Upload PNG to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("memes")
-      .upload(fileName, buffer, { contentType: "image/png", upsert: false });
+      .upload(fileName, buffer, { contentType: mimeType, upsert: false });
 
     if (uploadError) {
       logError("api.memes.upload", uploadError, { fileName });

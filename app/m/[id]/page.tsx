@@ -76,7 +76,7 @@ export default async function MemePage({ params }: Props) {
   return (
     <MemePageClient
       memeId={meme.id}
-      imageUrl={memeImageApiPath(meme.id)}
+      imageUrl={meme.image_url || memeImageApiPath(meme.id)}
       initialCounts={counts}
       remixTemplateId={meme.template_id}
       remixTexts={remixTexts}

@@ -149,12 +149,15 @@ export default function MemeEditor() {
     };
   })();
 
-  const exportDataUrl = useCallback(async (): Promise<string> => {
+  const exportDataUrl = useCallback(async (opts?: { forUpload?: boolean }): Promise<string> => {
     if (!stage) throw new Error("Canvas not ready");
     if (!bgImage) throw new Error("Image not loaded yet");
-    // Give Konva one full frame to flush the image onto the canvas before capture.
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     stage.draw();
+    if (opts?.forUpload) {
+      // Compressed JPEG for upload — ~10× smaller than full-res PNG
+      return stage.toDataURL({ pixelRatio: 1, mimeType: "image/jpeg", quality: 0.82 });
+    }
     return stage.toDataURL({ pixelRatio: 2 });
   }, [stage, bgImage]);
 
@@ -195,7 +198,7 @@ export default function MemeEditor() {
       // unmounts MemeEditor which destroys the Konva Stage, producing a black export.
       setSelectedSlot(null);
       setSelectedSticker(null);
-      const uri = await exportDataUrl();
+      const uri = await exportDataUrl({ forUpload: true });
       setPhase("exporting");
       const res = await fetch("/api/memes", {
         method: "POST",
