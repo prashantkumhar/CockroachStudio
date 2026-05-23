@@ -31,7 +31,10 @@ export default function LoadingScreen() {
     return () => clearInterval(id);
   }, []);
 
-  const activeStep = Math.min(PROGRESS_STEPS.length - 1, msgIndex % (PROGRESS_STEPS.length + 1));
+  const activeStep = Math.min(
+    PROGRESS_STEPS.length - 1,
+    msgIndex % (PROGRESS_STEPS.length + 1),
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
@@ -82,7 +85,8 @@ export default function LoadingScreen() {
             Generating meme directions...
           </p>
           <p className="mt-1 text-sm text-on-surface-variant">
-            We&apos;re reading the image, choosing formats, and writing captions.
+            We&apos;re reading the image, choosing formats, and writing
+            captions.
           </p>
 
           <div className="mt-4 space-y-2 text-left">
@@ -116,7 +120,9 @@ export default function LoadingScreen() {
                   <span
                     className={[
                       "text-sm",
-                      isActive || isDone ? "text-on-surface" : "text-on-surface-variant",
+                      isActive || isDone
+                        ? "text-on-surface"
+                        : "text-on-surface-variant",
                     ].join(" ")}
                   >
                     {step}

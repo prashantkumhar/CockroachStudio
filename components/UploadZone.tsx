@@ -375,8 +375,8 @@ export default function UploadZone() {
         <p className="mt-6 max-w-sm text-center text-xs text-on-surface-variant">
           Works best with photos of people, situations, or anything with a
           story. Desktop: drag a file or paste a screenshot. Phone: use Camera
-          for the native lens. AI suggestions are mocked for now, so you&apos;ll go
-          straight to editing.
+          for the native lens. AI suggestions are mocked for now, so you&apos;ll
+          go straight to editing.
         </p>
       </main>
 

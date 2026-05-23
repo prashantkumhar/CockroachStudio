@@ -464,7 +464,7 @@ export default function MemeEditor() {
       if (!ctx) return 0.5;
 
       const slot = template.slots[slotIndex];
-  if (!slot) return 0.5;
+      if (!slot) return 0.5;
       const centerX = Math.round(slot.anchorX * W);
       const centerY = Math.round(slot.anchorY * H);
       const sampleSize = 28;
@@ -569,7 +569,7 @@ export default function MemeEditor() {
 
   const selectedStyle =
     selectedSlot !== null && template.slots[selectedSlot]
-      ? textStyles[selectedSlot] ?? null
+      ? (textStyles[selectedSlot] ?? null)
       : null;
   const selectedBackgroundTone =
     selectedSlot !== null && template.slots[selectedSlot]

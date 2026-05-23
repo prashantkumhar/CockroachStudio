@@ -29,7 +29,9 @@ export type MemeTemplate = {
 };
 
 // White Impact text with thick black stroke — classic meme overlay style
-const impactOverlay = (overrides: Partial<TextSlot> & { id: string; placeholder: string }): TextSlot => ({
+const impactOverlay = (
+  overrides: Partial<TextSlot> & { id: string; placeholder: string },
+): TextSlot => ({
   anchorX: 0.5,
   anchorY: 0.5,
   width: 0.9,
@@ -44,7 +46,9 @@ const impactOverlay = (overrides: Partial<TextSlot> & { id: string; placeholder:
 });
 
 // Dark Impact text for light-background strips
-const impactDark = (overrides: Partial<TextSlot> & { id: string; placeholder: string }): TextSlot => ({
+const impactDark = (
+  overrides: Partial<TextSlot> & { id: string; placeholder: string },
+): TextSlot => ({
   anchorX: 0.5,
   anchorY: 0.5,
   width: 0.88,
@@ -68,8 +72,18 @@ export const templates: MemeTemplate[] = [
     canvasHeight: 600,
     imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 1 },
     slots: [
-      impactOverlay({ id: "top",    anchorY: 0.07, fontSize: 52, placeholder: "TOP TEXT" }),
-      impactOverlay({ id: "bottom", anchorY: 0.93, fontSize: 52, placeholder: "BOTTOM TEXT" }),
+      impactOverlay({
+        id: "top",
+        anchorY: 0.07,
+        fontSize: 52,
+        placeholder: "TOP TEXT",
+      }),
+      impactOverlay({
+        id: "bottom",
+        anchorY: 0.93,
+        fontSize: 52,
+        placeholder: "BOTTOM TEXT",
+      }),
     ],
   },
 
@@ -172,7 +186,7 @@ export const templates: MemeTemplate[] = [
         id: "caption",
         anchorX: 0.5,
         anchorY: 0.12,
-        width: 0.90,
+        width: 0.9,
         align: "center",
         fontFamily: "Inter, sans-serif",
         fontSize: 32,
@@ -180,7 +194,8 @@ export const templates: MemeTemplate[] = [
         stroke: "transparent",
         strokeWidth: 0,
         maxLines: 3,
-        placeholder: "That face when prod breaks right after your 'small refactor'",
+        placeholder:
+          "That face when prod breaks right after your 'small refactor'",
       },
     ],
   },
@@ -192,11 +207,32 @@ export const templates: MemeTemplate[] = [
     name: "3-Beat Crash",
     canvasWidth: 600,
     canvasHeight: 580,
-    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.70 },
+    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.7 },
     slots: [
-      impactDark({ id: "p1", anchorX: 0.17, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "this is calm" }),
-      impactDark({ id: "p2", anchorX: 0.50, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "this is weird" }),
-      impactDark({ id: "p3", anchorX: 0.83, anchorY: 0.845, width: 0.30, fontSize: 26, placeholder: "this is a disaster" }),
+      impactDark({
+        id: "p1",
+        anchorX: 0.17,
+        anchorY: 0.845,
+        width: 0.3,
+        fontSize: 22,
+        placeholder: "this is calm",
+      }),
+      impactDark({
+        id: "p2",
+        anchorX: 0.5,
+        anchorY: 0.845,
+        width: 0.3,
+        fontSize: 22,
+        placeholder: "this is weird",
+      }),
+      impactDark({
+        id: "p3",
+        anchorX: 0.83,
+        anchorY: 0.845,
+        width: 0.3,
+        fontSize: 26,
+        placeholder: "this is a disaster",
+      }),
     ],
   },
 
