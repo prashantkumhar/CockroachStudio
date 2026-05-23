@@ -104,7 +104,7 @@ export default function MemePageClient({
         }
       />
 
-      <div className="w-full max-w-lg px-4 pt-6 pb-2">
+      <div className="w-full max-w-lg px-4 pt-6 pb-2 animate-slide-up">
         {imgError || !imageUrl ? (
           <div className="flex w-full items-center justify-center rounded-bento border border-outline-variant bg-surface-container p-12 text-center">
             <div>
@@ -124,14 +124,14 @@ export default function MemePageClient({
         )}
       </div>
 
-      <div className="w-full max-w-lg px-4 py-4">
+      <div className="w-full max-w-lg px-4 py-4 animate-slide-up" style={{ animationDelay: "80ms" }}>
         <BentoCard>
           <p className="text-label-sm text-on-surface-variant mb-3">React</p>
           <div className="flex gap-3">
             {EMOJIS.map((emoji) => (
               <button
                 key={emoji}
-                onClick={() => handleReact(emoji)}
+                onPointerDown={() => handleReact(emoji)}
                 disabled={reacted.has(emoji)}
                 className={[
                   "flex-1 flex flex-col items-center gap-1 py-3 rounded-btn border transition-all",

@@ -51,6 +51,8 @@ export default function MemeEditor() {
     setTexts((prev) => t.slots.map((s, i) => prev[i] ?? s.placeholder));
     setDragPos({});
     setStickers([]);
+    setSelectedSticker(null);
+    setFontSizes({});
   }, []);
 
   const addSticker = useCallback(
@@ -99,6 +101,8 @@ export default function MemeEditor() {
 
   // Drag positions
   const [dragPos, setDragPos] = useState<Record<number, { x: number; y: number }>>({});
+  const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
+  const [fontSizes, setFontSizes] = useState<Record<number, number>>({});
 
   // Global font + color
   const [fontIdx, setFontIdx] = useState(0);
@@ -154,6 +158,8 @@ export default function MemeEditor() {
 
   const handleDownload = async () => {
     setBusy(true);
+    setSelectedSlot(null);
+    setSelectedSticker(null);
     const uri = await exportDataUrl();
     const a = document.createElement("a");
     a.download = "memeroach.png";
@@ -164,6 +170,8 @@ export default function MemeEditor() {
 
   const handleCopy = async () => {
     setBusy(true);
+    setSelectedSlot(null);
+    setSelectedSticker(null);
     const uri = await exportDataUrl();
     try {
       const blob = await (await fetch(uri)).blob();
@@ -183,6 +191,8 @@ export default function MemeEditor() {
     try {
       // Capture the canvas BEFORE setPhase("exporting") — changing the phase
       // unmounts MemeEditor which destroys the Konva Stage, producing a black export.
+      setSelectedSlot(null);
+      setSelectedSticker(null);
       const uri = await exportDataUrl();
       setPhase("exporting");
       const res = await fetch("/api/memes", {
@@ -322,7 +332,7 @@ export default function MemeEditor() {
                         width={tw}
                         text={texts[i] ?? slot.placeholder}
                         fontFamily={font}
-                        fontSize={slot.fontSize}
+                        fontSize={fontSizes[i] ?? slot.fontSize}
                         fontStyle="bold"
                         fill={fill}
                         stroke={fill === "#ffffff" ? "#000000" : (fill === "#ffff00" ? "#000000" : undefined)}
@@ -346,7 +356,21 @@ export default function MemeEditor() {
                     ];
                   })}
 
-                  {stickers.map((st) => (
+                  {stickers.map((st) => [
+                    selectedSticker === st.id && (
+                      <Rect
+                        key={`stsel-${st.id}`}
+                        x={st.x - 6}
+                        y={st.y - 6}
+                        width={st.size + 12}
+                        height={st.size + 12}
+                        stroke="#ffb783"
+                        strokeWidth={2}
+                        dash={[4, 2]}
+                        fill="transparent"
+                        listening={false}
+                      />
+                    ),
                     <KonvaText
                       key={st.id}
                       text={st.emoji}
@@ -361,8 +385,10 @@ export default function MemeEditor() {
                           )
                         )
                       }
-                    />
-                  ))}
+                      onClick={() => { setSelectedSlot(null); setSelectedSticker(st.id); }}
+                      onTap={() => { setSelectedSlot(null); setSelectedSticker(st.id); }}
+                    />,
+                  ])}
                 </Layer>
               </Stage>
             </div>
@@ -393,6 +419,36 @@ export default function MemeEditor() {
                          px-3 py-2 text-on-surface text-sm resize-none
                          focus:outline-none focus:border-secondary transition-colors"
             />
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-label-sm text-on-surface-variant">Size</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setFontSizes((prev) => ({
+                    ...prev,
+                    [selectedSlot!]: Math.max(12, (prev[selectedSlot!] ?? template.slots[selectedSlot!]!.fontSize) - 4),
+                  }))
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-btn border border-outline-variant bg-surface-container-high text-on-surface hover:border-secondary text-sm font-bold"
+              >
+                −
+              </button>
+              <span className="w-10 text-center text-sm tabular-nums text-on-surface">
+                {fontSizes[selectedSlot!] ?? template.slots[selectedSlot!]?.fontSize}px
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setFontSizes((prev) => ({
+                    ...prev,
+                    [selectedSlot!]: Math.min(80, (prev[selectedSlot!] ?? template.slots[selectedSlot!]!.fontSize) + 4),
+                  }))
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-btn border border-outline-variant bg-surface-container-high text-on-surface hover:border-secondary text-sm font-bold"
+              >
+                +
+              </button>
+            </div>
           </div>
         ) : (
           <p className="text-on-surface-variant text-xs text-center py-1">
@@ -401,21 +457,84 @@ export default function MemeEditor() {
         )}
 
         <div className="pb-2">
-          <p className="text-label-sm text-on-surface-variant mb-2">Stickers</p>
-          <div className="flex gap-1 overflow-x-auto pb-1">
-            {STICKER_EMOJIS.map((emoji) => (
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-label-sm text-on-surface-variant">Stickers</p>
+            {stickers.length > 0 && (
               <button
-                key={emoji}
                 type="button"
-                onClick={() => addSticker(emoji)}
-                className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-btn border border-outline-variant
-                           bg-surface-container-high text-xl transition-all hover:border-secondary active:scale-95"
-                aria-label={`Add ${emoji} sticker`}
+                onClick={() => { setStickers([]); setSelectedSticker(null); }}
+                className="text-xs text-error hover:underline"
               >
-                {emoji}
+                Clear all
               </button>
-            ))}
+            )}
           </div>
+
+          {selectedSticker ? (
+            <div className="flex items-center gap-2">
+              <span className="text-on-surface-variant text-sm flex-1">
+                {stickers.find((s) => s.id === selectedSticker)?.emoji} selected
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setStickers((prev) =>
+                    prev.map((s) =>
+                      s.id === selectedSticker ? { ...s, size: Math.max(20, s.size - 10) } : s
+                    )
+                  )
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-btn border border-outline-variant bg-surface-container-high text-on-surface text-sm font-bold hover:border-secondary"
+              >
+                −
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setStickers((prev) =>
+                    prev.map((s) =>
+                      s.id === selectedSticker ? { ...s, size: Math.min(120, s.size + 10) } : s
+                    )
+                  )
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-btn border border-outline-variant bg-surface-container-high text-on-surface text-sm font-bold hover:border-secondary"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStickers((prev) => prev.filter((s) => s.id !== selectedSticker));
+                  setSelectedSticker(null);
+                }}
+                className="flex h-9 items-center gap-1 rounded-btn border border-error/40 bg-error-container/20 px-3 text-xs font-semibold text-error hover:bg-error-container/40"
+              >
+                🗑 Remove
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedSticker(null)}
+                className="text-xs text-on-surface-variant hover:text-secondary"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-1 overflow-x-auto pb-1">
+              {STICKER_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => addSticker(emoji)}
+                  className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-btn border border-outline-variant
+                             bg-surface-container-high text-xl transition-all hover:border-secondary active:scale-95"
+                  aria-label={`Add ${emoji} sticker`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap pb-1">

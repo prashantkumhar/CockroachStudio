@@ -41,7 +41,7 @@ export default function PickScreen() {
           {suggestions.map((suggestion, i) => {
             const template = templateMap[suggestion.templateId];
             return (
-              <div key={i} className="flex flex-col gap-2 lg:col-span-4">
+              <div key={i} className="flex flex-col gap-2 lg:col-span-4 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                 <MemePreview
                   templateId={suggestion.templateId}
                   imageDataUrl={imageDataUrl}

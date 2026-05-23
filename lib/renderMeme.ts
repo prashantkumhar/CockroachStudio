@@ -46,7 +46,12 @@ function drawTextSlot(
   const lines = wrapText(ctx, text, maxPx, slot.maxLines);
   const lineHeight = slot.fontSize * 1.2;
   const totalHeight = lines.length * lineHeight;
-  const cx = slot.anchorX * canvasWidth;
+  // Match MemeEditor's baseX logic: anchor is the centre of the text box.
+  // ctx.textAlign "left" draws from cx, "right" draws back from cx, "center" centres on cx.
+  const cx =
+    slot.align === "left"  ? slot.anchorX * canvasWidth - maxPx / 2 :
+    slot.align === "right" ? slot.anchorX * canvasWidth + maxPx / 2 :
+    slot.anchorX * canvasWidth;
   const MARGIN = 6;
   // Clamp so the text block never spills past either canvas edge.
   const cy = Math.min(

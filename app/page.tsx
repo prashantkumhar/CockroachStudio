@@ -15,9 +15,6 @@ const MemeEditor = dynamic(() => import("@/components/MemeEditor"), { ssr: false
 export default function Home() {
   const phase        = useStore((s) => s.phase);
   const imageDataUrl = useStore((s) => s.imageDataUrl);
-  const setSuggestions = useStore((s) => s.setSuggestions);
-  const setPhase     = useStore((s) => s.setPhase);
-  const setError     = useStore((s) => s.setError);
 
   const suggestingFor = useRef<string | null>(null);
 
@@ -25,6 +22,10 @@ export default function Home() {
     if (phase !== "suggesting" || !imageDataUrl) return;
     if (suggestingFor.current === imageDataUrl) return;
     suggestingFor.current = imageDataUrl;
+
+    // Pull actions from the store directly — they are stable references and
+    // don't need to be deps, which keeps the deps array a fixed size.
+    const { setSuggestions, setPhase, setError } = useStore.getState();
 
     const [meta, base64] = imageDataUrl.split(";base64,");
     const mimeType = meta.split(":")[1];
@@ -56,7 +57,7 @@ export default function Home() {
         }
         setPhase("upload");
       });
-  }, [phase, imageDataUrl, setSuggestions, setPhase, setError]);
+  }, [phase, imageDataUrl]);
 
   if (phase === "upload")    return <UploadZone />;
   if (phase === "suggesting") return <LoadingScreen />;
