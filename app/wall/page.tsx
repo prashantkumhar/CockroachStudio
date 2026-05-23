@@ -48,10 +48,11 @@ export default async function WallPage() {
   return (
     <div className="min-h-screen bg-surface font-body text-on-surface">
       <AppNav
+        showWallLink={false}
         right={
           <a
             href="/"
-            className="inline-flex min-h-[44px] items-center rounded-full bg-secondary px-4 text-sm font-semibold text-on-secondary transition-opacity hover:opacity-90"
+            className="inline-flex min-h-11 items-center rounded-full bg-secondary px-4 text-sm font-semibold text-on-secondary transition-opacity hover:opacity-90"
           >
             Make your own →
           </a>

@@ -580,21 +580,24 @@ export default function MemeEditor() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <AppNav
-        step={3}
-        right={
-          <button
-            type="button"
-            onClick={() => setPhase("picking")}
-            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
-          >
-            ← Back
-          </button>
-        }
-      />
+      <div className="sticky top-0 z-50 bg-surface">
+        <AppNav step={3} sticky={false} />
+        <div className="border-b border-outline-variant/70 bg-surface/95 backdrop-blur-sm">
+          <div className="mx-auto w-full max-w-page px-4 py-2 sm:px-8 sm:py-3">
+            <button
+              type="button"
+              onClick={() => setPhase("picking")}
+              className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              <span aria-hidden>←</span>
+              <span>Back to ideas</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Template switcher */}
-      <div className="flex gap-2 overflow-x-auto px-4 py-2.5 border-b border-outline-variant">
+      <div className="flex gap-2 overflow-x-auto border-b border-outline-variant px-4 py-2.5 sm:px-8">
         {templates.map((t) => (
           <button
             key={t.id}

@@ -38,18 +38,21 @@ export default function LoadingScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <AppNav
-        step={2}
-        right={
-          <button
-            type="button"
-            onClick={() => setPhase("upload")}
-            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
-          >
-            ✕ Cancel
-          </button>
-        }
-      />
+      <div className="sticky top-0 z-50 bg-surface">
+        <AppNav step={2} sticky={false} />
+        <div className="border-b border-outline-variant/70 bg-surface/95 backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-page justify-start px-4 py-2 sm:px-8 sm:py-3">
+            <button
+              type="button"
+              onClick={() => setPhase("upload")}
+              className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              <span aria-hidden>←</span>
+              <span>Back to upload</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8">
         {/* Photo preview with scanning overlay */}

@@ -19,18 +19,21 @@ export default function PickScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <AppNav
-        step={2}
-        right={
-          <button
-            type="button"
-            onClick={() => setPhase("upload")}
-            className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
-          >
-            ← New photo
-          </button>
-        }
-      />
+      <div className="sticky top-0 z-50 bg-surface">
+        <AppNav step={2} sticky={false} />
+        <div className="border-b border-outline-variant/70 bg-surface/95 backdrop-blur-sm">
+          <div className="mx-auto w-full max-w-page px-4 py-2 sm:px-8 sm:py-3">
+            <button
+              type="button"
+              onClick={() => setPhase("upload")}
+              className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-secondary"
+            >
+              <span aria-hidden>←</span>
+              <span>Back to upload</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <main className="mx-auto w-full max-w-page px-4 py-8 sm:px-8">
         <PageHeader
