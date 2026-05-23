@@ -12,12 +12,17 @@ export default function SharedScreen() {
   const creatorToken = useStore((s) => s.creatorToken);
   const reset = useStore((s) => s.reset);
   const [copied, setCopied] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
 
   useEffect(() => {
     if (sharedMemeId && creatorToken) {
       localStorage.setItem(`memeroach-creator-${sharedMemeId}`, creatorToken);
     }
   }, [sharedMemeId, creatorToken]);
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== "undefined" && !!navigator.share);
+  }, []);
 
   const shareUrl =
     typeof window !== "undefined"
@@ -30,13 +35,25 @@ export default function SharedScreen() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleNativeShare = async () => {
+    try {
+      await navigator.share({
+        title: "Check out my meme!",
+        text: "Made with Memeroach 🪲",
+        url: shareUrl,
+      });
+    } catch {
+      // user cancelled — no-op
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <AppNav step={4} />
 
       <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8">
-        <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="text-6xl">🪲</div>
+        <div className="w-full max-w-sm space-y-6 text-center animate-slide-up">
+          <div className="text-6xl animate-pop">🪲</div>
 
           <PageHeader
             align="center"
@@ -50,7 +67,17 @@ export default function SharedScreen() {
           </BentoCard>
 
           <div className="flex flex-col gap-3">
-            <BrandButton fullWidth onClick={handleCopy}>
+            {canNativeShare && (
+              <BrandButton fullWidth onClick={handleNativeShare}>
+                📤 Share via...
+              </BrandButton>
+            )}
+
+            <BrandButton
+              fullWidth
+              variant={canNativeShare ? "outline" : "primary"}
+              onClick={handleCopy}
+            >
               {copied ? "✓ Copied!" : "📋 Copy link"}
             </BrandButton>
 
@@ -74,9 +101,9 @@ export default function SharedScreen() {
 
             <a
               href="/wall"
-              className="min-h-11 text-sm text-on-surface-variant transition-colors hover:text-secondary"
+              className="min-h-11 flex items-center justify-center text-sm text-on-surface-variant transition-colors hover:text-secondary"
             >
-              🏆 See today's meme wall →
+              🏆 See today&apos;s meme wall →
             </a>
           </div>
         </div>

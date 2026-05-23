@@ -33,7 +33,14 @@ export default function MemePageClient({
   const [totalLive, setTotalLive] = useState(Object.values(initialCounts).reduce((a, b) => a + b, 0));
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
   const floatIdRef = useRef(0);
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== "undefined" && !!navigator.share);
+  }, []);
 
   // Check if creator via localStorage
   useEffect(() => {
@@ -175,6 +182,14 @@ export default function MemePageClient({
       )}
 
       <div className="w-full max-w-lg space-y-3 px-4 pb-10">
+        {canNativeShare && (
+          <BrandButton
+            fullWidth
+            onClick={() => navigator.share({ title: "Check out this meme!", text: "Made with Memeroach 🪲", url: shareUrl }).catch(() => {})}
+          >
+            📤 Share via...
+          </BrandButton>
+        )}
         {remixTemplateId && remixTexts.length > 0 && (
           <BrandButton
             fullWidth

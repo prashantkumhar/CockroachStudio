@@ -100,13 +100,18 @@ export default async function WallPage() {
                       href={`/m/${meme.id}`}
                       className="group block bg-surface-container border border-outline-variant rounded-bento overflow-hidden transition-shadow hover:shadow-float"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={memeImageApiPath(meme.id)}
-                        alt="Meme"
-                        loading="lazy"
-                        className="aspect-square w-full object-contain"
-                      />
+                      <div className="relative aspect-square w-full bg-surface-container-high">
+                        {/* skeleton shimmer — sits behind the image */}
+                        <div className="absolute inset-0 animate-pulse bg-surface-container-high" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={memeImageApiPath(meme.id)}
+                          alt="Meme"
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-300"
+                          onLoad={(e) => { e.currentTarget.style.opacity = "1"; }}
+                        />
+                      </div>
                       <div className="flex items-center justify-between px-3 py-2">
                         <span className="text-label-sm text-on-surface-variant uppercase tracking-wide">
                           reactions

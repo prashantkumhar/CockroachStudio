@@ -30,7 +30,7 @@ function wrapText(
   return lines;
 }
 
-function drawTextSlot(
+export function drawTextSlot(
   ctx: CanvasRenderingContext2D,
   slot: TextSlot,
   text: string,

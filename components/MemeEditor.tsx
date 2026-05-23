@@ -32,6 +32,7 @@ export default function MemeEditor() {
   const setPhase     = useStore((s) => s.setPhase);
   const setShared    = useStore((s) => s.setShared);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [gifBusy, setGifBusy] = useState(false);
 
   const initial = suggestions[selectedIdx];
 
@@ -209,6 +210,29 @@ export default function MemeEditor() {
       setShareError("Failed to share. Check your connection and try again.");
     }
     setBusy(false);
+  };
+
+  const handleDownloadGif = async () => {
+    if (!imageDataUrl) return;
+    setGifBusy(true);
+    try {
+      const { renderMemeGif } = await import("@/lib/renderGif");
+      const blob = await renderMemeGif({
+        template,
+        imageDataUrl,
+        texts: texts.map((t, i) => t || template.slots[i].placeholder),
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "memeroach.gif";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      console.error("[gif]", err);
+    } finally {
+      setGifBusy(false);
+    }
   };
 
   const font  = FONTS[fontIdx].value;
@@ -578,14 +602,23 @@ export default function MemeEditor() {
         </p>
       )}
 
-      <div className="flex gap-2 border-t border-outline-variant bg-surface px-4 py-3">
+      <div className="flex flex-col gap-2 border-t border-outline-variant bg-surface px-4 py-3">
+        <BrandButton
+          variant="ghost"
+          fullWidth
+          onClick={handleDownloadGif}
+          disabled={gifBusy || !stage}
+        >
+          {gifBusy ? "⏳ Generating GIF…" : "🎞️ Download animated GIF"}
+        </BrandButton>
+        <div className="flex gap-2">
         <BrandButton
           variant="ghost"
           className="flex-1"
           onClick={handleDownload}
           disabled={busy || !stage}
         >
-          ⬇ Save
+          ⬇ PNG
         </BrandButton>
         <BrandButton
           variant="ghost"
@@ -603,6 +636,7 @@ export default function MemeEditor() {
         >
           {busy ? "..." : !stage ? "Loading..." : "🔗 Share"}
         </BrandButton>
+        </div>
       </div>
     </div>
   );
