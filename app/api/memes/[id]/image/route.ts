@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .download(meme.image_path);
 
   if (downloadError || !file) {
-    logError("api.memes.image", downloadError, { id, path: meme.image_path });
+    logInfo("api.memes.image", "storage_miss", { id, path: meme.image_path });
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
   }
 

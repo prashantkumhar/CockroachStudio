@@ -28,47 +28,68 @@ export type MemeTemplate = {
   canvasHeight: number;
 };
 
-const impactSlot = (overrides: Partial<TextSlot> & { id: string; placeholder: string }): TextSlot => ({
+// White Impact text with thick black stroke — classic meme overlay style
+const impactOverlay = (overrides: Partial<TextSlot> & { id: string; placeholder: string }): TextSlot => ({
   anchorX: 0.5,
   anchorY: 0.5,
   width: 0.9,
   align: "center",
   fontFamily: "Impact, Arial Black, sans-serif",
-  fontSize: 42,
+  fontSize: 48,
   fill: "#ffffff",
   stroke: "#000000",
-  strokeWidth: 2,
+  strokeWidth: 2.5,
   maxLines: 3,
   ...overrides,
 });
 
+// Dark Impact text for light-background strips
+const impactDark = (overrides: Partial<TextSlot> & { id: string; placeholder: string }): TextSlot => ({
+  anchorX: 0.5,
+  anchorY: 0.5,
+  width: 0.88,
+  align: "center",
+  fontFamily: "Impact, Arial Black, sans-serif",
+  fontSize: 26,
+  fill: "#0f1729",
+  stroke: "transparent",
+  strokeWidth: 0,
+  maxLines: 2,
+  ...overrides,
+});
+
 export const templates: MemeTemplate[] = [
+  // ── 1. Classic Top/Bottom ──────────────────────────────────────────────────
+  // Full-bleed cover image; Impact text overlaid top & bottom.
   {
     id: "top-bottom",
     name: "Classic Top/Bottom",
     canvasWidth: 600,
     canvasHeight: 600,
-    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 1 },
+    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 1 },
     slots: [
-      impactSlot({ id: "top", anchorX: 0.5, anchorY: 0.08, placeholder: "TOP TEXT" }),
-      impactSlot({ id: "bottom", anchorX: 0.5, anchorY: 0.92, placeholder: "BOTTOM TEXT" }),
+      impactOverlay({ id: "top",    anchorY: 0.07, fontSize: 52, placeholder: "TOP TEXT" }),
+      impactOverlay({ id: "bottom", anchorY: 0.93, fontSize: 52, placeholder: "BOTTOM TEXT" }),
     ],
   },
+
+  // ── 2. Modern Bottom Caption ───────────────────────────────────────────────
+  // Cover image fills top 82 %; readable white strip below for the caption.
   {
     id: "bottom-only",
     name: "Bottom Caption",
     canvasWidth: 600,
-    canvasHeight: 650,
-    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.85 },
+    canvasHeight: 700,
+    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.82 },
     slots: [
       {
         id: "caption",
         anchorX: 0.5,
-        anchorY: 0.93,
-        width: 0.95,
+        anchorY: 0.91,
+        width: 0.92,
         align: "center",
-        fontFamily: "Inter, sans-serif",
-        fontSize: 24,
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontSize: 30,
         fill: "#0f1729",
         stroke: "transparent",
         strokeWidth: 0,
@@ -77,44 +98,44 @@ export const templates: MemeTemplate[] = [
       },
     ],
   },
+
+  // ── 3. POV: ────────────────────────────────────────────────────────────────
+  // Dark Impact header in a light strip; cover image fills the rest.
   {
     id: "pov",
     name: "POV:",
     canvasWidth: 600,
     canvasHeight: 700,
-    imageLayout: { fit: "contain", x: 0, y: 0.15, width: 1, height: 0.85 },
+    imageLayout: { fit: "cover", x: 0, y: 0.175, width: 1, height: 0.825 },
     slots: [
-      {
+      impactDark({
         id: "pov-text",
-        anchorX: 0.5,
-        anchorY: 0.08,
-        width: 0.9,
-        align: "center",
-        fontFamily: "Inter, sans-serif",
-        fontSize: 28,
-        fill: "#ffffff",
-        stroke: "#000000",
-        strokeWidth: 1,
+        anchorY: 0.088,
+        width: 0.92,
+        fontSize: 36,
         maxLines: 2,
-        placeholder: "POV: you just opened Slack on a Sunday",
-      },
+        placeholder: "POV: you opened Slack on a Sunday",
+      }),
     ],
   },
+
+  // ── 4. When You… ──────────────────────────────────────────────────────────
+  // Cover image fills top 78 %; two-line setup + punchline in white strip.
   {
     id: "when-you",
     name: "When You...",
     canvasWidth: 600,
-    canvasHeight: 680,
-    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.82 },
+    canvasHeight: 700,
+    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.78 },
     slots: [
       {
         id: "setup",
         anchorX: 0.5,
         anchorY: 0.86,
-        width: 0.95,
+        width: 0.92,
         align: "center",
         fontFamily: "Inter, sans-serif",
-        fontSize: 22,
+        fontSize: 28,
         fill: "#0f1729",
         stroke: "transparent",
         strokeWidth: 0,
@@ -124,11 +145,11 @@ export const templates: MemeTemplate[] = [
       {
         id: "punchline",
         anchorX: 0.5,
-        anchorY: 0.95,
-        width: 0.95,
+        anchorY: 0.965,
+        width: 0.92,
         align: "center",
         fontFamily: "Inter, sans-serif",
-        fontSize: 18,
+        fontSize: 20,
         fill: "#44474e",
         stroke: "transparent",
         strokeWidth: 0,
@@ -137,57 +158,68 @@ export const templates: MemeTemplate[] = [
       },
     ],
   },
+
+  // ── 5. Caption Above ──────────────────────────────────────────────────────
+  // Bold text in light top strip builds tension; cover image is the punchline.
   {
     id: "caption-above",
     name: "Caption Above",
     canvasWidth: 600,
-    canvasHeight: 700,
-    imageLayout: { fit: "contain", x: 0, y: 0.25, width: 1, height: 0.75 },
+    canvasHeight: 720,
+    imageLayout: { fit: "cover", x: 0, y: 0.24, width: 1, height: 0.76 },
     slots: [
       {
         id: "caption",
         anchorX: 0.5,
-        anchorY: 0.13,
-        width: 0.92,
+        anchorY: 0.12,
+        width: 0.90,
         align: "center",
         fontFamily: "Inter, sans-serif",
-        fontSize: 26,
+        fontSize: 32,
         fill: "#0f1729",
         stroke: "transparent",
         strokeWidth: 0,
         maxLines: 3,
-        placeholder: "Text above the photo goes here",
+        placeholder: "That face when prod breaks right after your 'small refactor'",
       },
     ],
   },
+
+  // ── 6. 3-Panel Escalate ───────────────────────────────────────────────────
+  // Cover image fills top 70 %; three escalating captions in the strip below.
   {
     id: "panel-zoom",
-    name: "3-Panel Zoom",
+    name: "3-Panel Escalate",
     canvasWidth: 600,
-    canvasHeight: 220,
-    imageLayout: { fit: "contain", x: 0, y: 0, width: 1, height: 0.62 },
+    canvasHeight: 580,
+    imageLayout: { fit: "cover", x: 0, y: 0, width: 1, height: 0.70 },
     slots: [
-      impactSlot({ id: "p1", anchorX: 0.17, anchorY: 0.82, width: 0.28, fontSize: 20, placeholder: "Panel 1" }),
-      impactSlot({ id: "p2", anchorX: 0.5, anchorY: 0.82, width: 0.28, fontSize: 20, placeholder: "Panel 2" }),
-      impactSlot({ id: "p3", anchorX: 0.83, anchorY: 0.82, width: 0.28, fontSize: 20, placeholder: "Panel 3" }),
+      impactDark({ id: "p1", anchorX: 0.17, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "looks fine" }),
+      impactDark({ id: "p2", anchorX: 0.50, anchorY: 0.845, width: 0.30, fontSize: 22, placeholder: "ships anyway" }),
+      impactDark({ id: "p3", anchorX: 0.83, anchorY: 0.845, width: 0.30, fontSize: 26, placeholder: "EVERYTHING'S FINE" }),
     ],
   },
+
+  // ── 7. Nobody: / Absolutely nobody: ──────────────────────────────────────
+  // Classic format: grey labels in top strip → cover photo → bold punchline
+  // in bottom strip. The two "nobody" lines are close together and small;
+  // the punchline gets the visual weight.
   {
     id: "nobody-nobody",
-    name: "Nobody: / Absolutely nobody:",
+    name: "Nobody:",
     canvasWidth: 600,
-    canvasHeight: 720,
-    imageLayout: { fit: "contain", x: 0, y: 0.35, width: 1, height: 0.65 },
+    canvasHeight: 740,
+    imageLayout: { fit: "cover", x: 0, y: 0.26, width: 1, height: 0.58 },
     slots: [
       {
         id: "nobody",
         anchorX: 0.5,
-        anchorY: 0.08,
+        anchorY: 0.075,
         width: 0.9,
         align: "left",
         fontFamily: "Inter, sans-serif",
-        fontSize: 24,
-        fill: "#0f1729",
+        fontSize: 26,
+        fill: "#5f6368",
         stroke: "transparent",
         strokeWidth: 0,
         maxLines: 1,
@@ -196,12 +228,12 @@ export const templates: MemeTemplate[] = [
       {
         id: "absolutely-nobody",
         anchorX: 0.5,
-        anchorY: 0.16,
+        anchorY: 0.155,
         width: 0.9,
         align: "left",
         fontFamily: "Inter, sans-serif",
-        fontSize: 24,
-        fill: "#0f1729",
+        fontSize: 26,
+        fill: "#5f6368",
         stroke: "transparent",
         strokeWidth: 0,
         maxLines: 1,
@@ -210,16 +242,16 @@ export const templates: MemeTemplate[] = [
       {
         id: "punchline",
         anchorX: 0.5,
-        anchorY: 0.26,
+        anchorY: 0.905,
         width: 0.9,
-        align: "left",
+        align: "center",
         fontFamily: "Inter, sans-serif",
-        fontSize: 26,
+        fontSize: 32,
         fill: "#0f1729",
         stroke: "transparent",
         strokeWidth: 0,
         maxLines: 2,
-        placeholder: "Me at 3am:",
+        placeholder: "Me solving world hunger at 3am:",
       },
     ],
   },
